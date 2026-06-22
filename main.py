@@ -1,0 +1,110 @@
+import os
+import argparse
+import json
+import torch
+import wandb
+from tqdm import tqdm
+from src.engine import (
+    build_components,
+    train_one_epoch,
+    evaluate,
+    quantize_weights,
+    save_checkpoint,
+    load_checkpoint
+)
+
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--dataset', type=str, default='nmnist', choices=['nmnist', 'cifar10', 'dvs_gesture'])
+    parser.add_argument('--epochs', type=int, default=20)
+    parser.add_argument('--batch_size', type=int, default=64)
+    parser.add_argument('--lr', type=float, default=1e-3)
+    parser.add_argument('--Time', type=int, default=16)
+    parser.add_argument('--save_dir', type=str, default='./saved_models')
+    parser.add_argument('--use_wandb', action='store_true')
+    parser.add_argument('--wandb_project', type=str, default='quantized_spikenet')
+    return parser.parse_args()
+
+def main():
+    args = parse_args()
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    print(f"Device: {device} | Dataset: {args.dataset} | Epochs: {args.epochs} | Batch Size: {args.batch_size} | LR: {args.lr} | Time: {args.Time}")
+
+    if args.use_wandb:
+        wandb.init(project=args.wandb_project, config=vars(args))
+
+    config_path = os.path.join("configs", f"{args.dataset}.json")
+    with open(config_path, 'r') as f:
+        model_config = json.load(f)
+
+    if args.use_wandb:
+        wandb.init(project=args.wandb_project, config={**vars(args), **model_config})
+
+    model, train_loader, test_loader, optimizer, scheduler, criterion, scaler = build_components(
+        args.dataset, model_config, args.batch_size, args.Time, args.lr, args.epochs, device
+    )
+
+    args.save_dir = os.path.join(args.save_dir, args.dataset)
+    os.makedirs(args.save_dir, exist_ok=True)
+    resume_path = os.path.join(args.save_dir, "checkpoint_latest.pth")
+
+    start_epoch, best_acc = load_checkpoint(resume_path, model, optimizer, scheduler, scaler, device)
+
+    pbar = tqdm(range(start_epoch, args.epochs), desc="Global Training", initial=start_epoch, total=args.epochs)
+    
+    for epoch in pbar:
+        train_loss, train_acc = train_one_epoch(model, train_loader, optimizer, criterion, device, scaler)
+        test_loss, test_acc, test_sparsity = evaluate(model, test_loader, criterion, device, measure_sparsity=True)
+        scheduler.step()
+
+        is_best = test_acc > best_acc
+        best_acc = max(test_acc, best_acc)
+        
+        checkpoint_state = {
+            'epoch': epoch + 1,
+            'state_dict': model.state_dict(),
+            'best_acc': best_acc,
+            'optimizer': optimizer.state_dict(),
+            'scheduler': scheduler.state_dict(),
+        }
+        if scaler is not None:
+            checkpoint_state['scaler'] = scaler.state_dict()
+            
+        save_checkpoint(checkpoint_state, is_best, args.save_dir)
+
+        if is_best:
+            tqdm.write(f"Epoch {epoch+1}: New best model saved (Acc: {test_acc:.2f}%)")
+        
+        pbar.set_postfix({
+            'Tr Loss': f"{train_loss:.4f}",
+            'Tr Acc': f"{train_acc:.2f}%", 
+            'Te Loss': f"{test_loss:.4f}",
+            'Te Acc': f"{test_acc:.2f}%",
+            'Sparsity': f"{test_sparsity:.2f}%"
+        })
+
+        if args.use_wandb:
+            wandb.log({
+                "train/loss": train_loss,
+                "train/acc": train_acc,
+                "test/loss": test_loss,
+                "test/acc": test_acc,
+                "test/sparsity": test_sparsity,
+                "epoch": epoch + 1
+            })
+
+    base_path = os.path.join(args.save_dir, f"{args.dataset}_base.pth")
+    torch.save(model.state_dict(), base_path)
+    
+    quantized_weights = quantize_weights(model, num_bits=8)
+    _, _, _ = evaluate(model, test_loader, criterion, device)
+    
+    quantized_path = os.path.join(args.save_dir, f"{args.dataset}_quantized.pth")
+    torch.save(quantized_weights, quantized_path)
+    print(f"Integer weights (int8) ready for the FPGA saved in : {quantized_path}")
+
+    if args.use_wandb:
+        wandb.finish()
+
+if __name__ == "__main__":
+    main()

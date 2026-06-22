@@ -1,0 +1,8 @@
+{
+    "architecture": "mlp",
+    "params": {
+        "input_size": 2312,
+        "hidden_size": 256,
+        "output_size": 10
+    }
+}

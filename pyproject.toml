@@ -1,0 +1,20 @@
+[project]
+name = "quantized-spikenet"
+version = "0.1.0"
+description = "A modular Spiking Neural Network (SNN) training pipeline built with PyTorch and SpikingJelly, optimized for event-based vision tasks and FPGA-ready hardware quantization."
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "pytest>=9.1.1",
+    "spikingjelly>=0.0.0.0.14",
+    "tonic>=1.6.0",
+    "wandb>=0.27.2",
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+filterwarnings = [
+    "ignore::DeprecationWarning:torch.*",
+    "ignore::SyntaxWarning:spikingjelly.*",
+    "ignore::SyntaxWarning:tonic.*"
+]

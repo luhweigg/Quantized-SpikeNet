@@ -1,0 +1,7 @@
+{
+    "architecture": "deep_cnn",
+    "params": {
+        "in_channels": 2,
+        "out_classes": 10
+    }
+}
