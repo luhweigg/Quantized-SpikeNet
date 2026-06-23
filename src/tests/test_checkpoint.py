@@ -3,7 +3,7 @@ import tempfile
 import torch
 import torch.nn as nn
 from torch.optim.lr_scheduler import CosineAnnealingLR
-from src.models import GenericMLPSNN
+from src.models import SpikingMLP
 from src.engine import train_one_epoch
 from src.engine import save_checkpoint
 
@@ -29,7 +29,7 @@ def test_checkpoint_resume_parity():
     criterion = nn.CrossEntropyLoss()
 
     set_seed(67)
-    model_A = GenericMLPSNN(input_size=2312, hidden_size=256, output_size=10).to(device)
+    model_A = SpikingMLP(input_size=2312, hidden_size=256, output_size=10).to(device)
     opt_A = torch.optim.AdamW(model_A.parameters(), lr=1e-3)
     sch_A = CosineAnnealingLR(opt_A, T_max=4)
     
@@ -40,7 +40,7 @@ def test_checkpoint_resume_parity():
     weights_A = {k: v.clone() for k, v in model_A.state_dict().items()}
 
     set_seed(67)
-    model_B = GenericMLPSNN(input_size=2312, hidden_size=256, output_size=10).to(device)
+    model_B = SpikingMLP(input_size=2312, hidden_size=256, output_size=10).to(device)
     opt_B = torch.optim.AdamW(model_B.parameters(), lr=1e-3)
     sch_B = CosineAnnealingLR(opt_B, T_max=4)
     
@@ -60,7 +60,7 @@ def test_checkpoint_resume_parity():
         }
         save_checkpoint(checkpoint_state, False, tmp_dir)
 
-        model_C = GenericMLPSNN(input_size=2312, hidden_size=256, output_size=10).to(device)
+        model_C = SpikingMLP(input_size=2312, hidden_size=256, output_size=10).to(device)
         opt_C = torch.optim.AdamW(model_C.parameters(), lr=1e-3)
         sch_C = CosineAnnealingLR(opt_C, T_max=4)
         

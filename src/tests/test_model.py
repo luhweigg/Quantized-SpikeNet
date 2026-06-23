@@ -1,16 +1,16 @@
 import torch
 import torch.nn as nn
-from src.models import GenericMLPSNN, DeepConvSNN
+from src.models import SpikingMLP, SpikingVGG5
 from src.engine import train_one_epoch
 
 def test_overfit_single_batch_NMNIST():
     """
-    Verifies that the model GenericMLPSNN can overfit a random batch,
+    Verifies that the model SpikingMLP can overfit a random batch,
     validating backpropagation and the SNN computation graph.
     """
     torch.manual_seed(67)
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    model = GenericMLPSNN(input_size=2312, hidden_size=256, output_size=10).to(device)
+    model = SpikingMLP(input_size=2312, hidden_size=256, output_size=10).to(device)
 
     batch_size = 4
     T = 16
@@ -36,12 +36,12 @@ def test_overfit_single_batch_NMNIST():
 
 def test_overfit_single_batch_DVSGesture():
     """
-    Verifies that the model DeepConvSNN can overfit a random batch,
+    Verifies that the model SpikingVGG5 can overfit a random batch,
     validating backpropagation and the SNN computation graph.
     """
     torch.manual_seed(67)
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    model = DeepConvSNN(in_channels=2, out_classes=11).to(device)
+    model = SpikingVGG5(in_channels=2, out_classes=11).to(device)
 
     batch_size = 2
     T = 2

@@ -2,11 +2,11 @@ import torch
 
 from src.data_loaders import cifar10_dvs_loader
 from src.engine import quantize_weights
-from src.models import CifarCompactConvSNN, DeepConvSNN, GenericMLPSNN
+from src.models import SpikingMLP, CompactSpikingCNN, SpikingVGG5
 
 
 def test_deepconv_snn_accepts_downsampled_cifar10_shape():
-    model = DeepConvSNN(in_channels=2, out_classes=10)
+    model = SpikingVGG5(in_channels=2, out_classes=10)
     x = torch.zeros(4, 2, 2, 32, 32)
 
     with torch.no_grad():
@@ -16,7 +16,7 @@ def test_deepconv_snn_accepts_downsampled_cifar10_shape():
 
 
 def test_quantization_returns_metadata():
-    model = GenericMLPSNN(input_size=2312, hidden_size=256, output_size=10)
+    model = SpikingMLP(input_size=2312, hidden_size=256, output_size=10)
 
     with torch.no_grad():
         for parameter in model.parameters():
@@ -59,8 +59,8 @@ def test_cifar10_dvs_split_is_deterministic(monkeypatch):
 
 
 def test_cifar_compact_and_deep_shapes_match_for_cifar10():
-    compact = CifarCompactConvSNN(in_channels=2, out_classes=10)
-    deep = DeepConvSNN(in_channels=2, out_classes=10)
+    compact = CompactSpikingCNN(in_channels=2, out_classes=10)
+    deep = SpikingVGG5(in_channels=2, out_classes=10)
     x = torch.zeros(4, 2, 2, 32, 32)
 
     with torch.no_grad():
@@ -72,8 +72,8 @@ def test_cifar_compact_and_deep_shapes_match_for_cifar10():
 
 
 def test_cifar_compact_has_fewer_parameters_than_deep():
-    compact = CifarCompactConvSNN(in_channels=2, out_classes=10)
-    deep = DeepConvSNN(in_channels=2, out_classes=10)
+    compact = CompactSpikingCNN(in_channels=2, out_classes=10)
+    deep = SpikingVGG5(in_channels=2, out_classes=10)
 
     compact_params = sum(p.numel() for p in compact.parameters())
     deep_params = sum(p.numel() for p in deep.parameters())

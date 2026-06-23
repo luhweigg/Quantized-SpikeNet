@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 from spikingjelly.activation_based import functional
-from src.models import GenericMLPSNN, DeepConvSNN
+from src.models import SpikingMLP, SpikingVGG5
 
 def test_gradient_flow_NMNIST():
     """
@@ -11,7 +11,7 @@ def test_gradient_flow_NMNIST():
     """
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     torch.manual_seed(67)
-    model = GenericMLPSNN(input_size=2312, hidden_size=256, output_size=10).to(device)
+    model = SpikingMLP(input_size=2312, hidden_size=256, output_size=10).to(device)
 
     batch_size, T, C, H, W = 4, 16, 2, 34, 34
     events = (torch.rand(T, batch_size, C, H, W) > 0.5).float().to(device)
@@ -48,7 +48,7 @@ def test_gradient_flow_DVSGesture():
     """
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     torch.manual_seed(67)
-    model = DeepConvSNN(in_channels=2, out_classes=11).to(device)
+    model = SpikingVGG5(in_channels=2, out_classes=11).to(device)
 
     batch_size, T, C, H, W = 2, 4, 2, 128, 128
     events = (torch.rand(T, batch_size, C, H, W) > 0.9).float().to(device)
