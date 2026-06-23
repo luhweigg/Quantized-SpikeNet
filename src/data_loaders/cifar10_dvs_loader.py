@@ -3,7 +3,7 @@ import tonic
 import tonic.transforms as transforms
 from torch.utils.data import random_split
 
-def get_cifar10_loaders(batch_size=64, n_time_bins=10, num_workers=4):
+def get_cifar10_loaders(batch_size=64, n_time_bins=10, num_workers=4, split_seed=67):
     """
     Get CIFAR10-DVS data loaders.
     """
@@ -18,7 +18,8 @@ def get_cifar10_loaders(batch_size=64, n_time_bins=10, num_workers=4):
     
     train_size = int(0.8 * len(dataset))
     test_size = len(dataset) - train_size
-    train_set, test_set = random_split(dataset, [train_size, test_size])
+    generator = torch.Generator().manual_seed(split_seed)
+    train_set, test_set = random_split(dataset, [train_size, test_size], generator=generator)
 
     train_loader = torch.utils.data.DataLoader(
         train_set, 

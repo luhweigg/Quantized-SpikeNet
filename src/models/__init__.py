@@ -1,1 +1,1 @@
-from .architectures import GenericMLPSNN, DeepConvSNN
+from .architectures import SpikingMLP, CompactSpikingCNN, SpikingVGG5

@@ -1,5 +1,5 @@
 {
-    "architecture": "mlp",
+    "architecture": "SpikingMLP",
     "params": {
         "input_size": 2312,
         "hidden_size": 256,

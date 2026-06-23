@@ -12,6 +12,7 @@ from src.engine import (
     quantize_weights,
     save_checkpoint,
     load_checkpoint,
+    capture_rng_state,
     CSVLogger,
     EarlyStopping
 )
@@ -34,9 +35,6 @@ def main():
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     print(f"Device: {device} | Dataset: {args.dataset} | Epochs: {args.epochs} | Batch Size: {args.batch_size} | LR: {args.lr} | Time: {args.Time}")
 
-    if args.use_wandb:
-        wandb.init(project=args.wandb_project, config=vars(args))
-
     config_path = os.path.join("configs", f"{args.dataset}.json")
     with open(config_path, 'r') as f:
         model_config = json.load(f)
@@ -44,26 +42,35 @@ def main():
     if args.use_wandb:
         wandb.init(project=args.wandb_project, config={**vars(args), **model_config})
 
+    if args.resume:
+        if args.resume.endswith('.pth'):
+            if not os.path.isfile(args.resume):
+                raise FileNotFoundError(f"Resume checkpoint not found: {args.resume}")
+        else:
+            resume_candidate = os.path.join(args.resume, 'checkpoint_latest.pth')
+            if not os.path.isfile(resume_candidate):
+                raise FileNotFoundError(f"Resume checkpoint not found: {resume_candidate}")
+
     model, train_loader, test_loader, optimizer, scheduler, criterion, scaler = build_components(
         args.dataset, model_config, args.batch_size, args.Time, args.lr, args.epochs, device
     )
 
-    args.save_dir = os.path.join(args.save_dir, args.dataset)
     if args.resume:
-        args.save_dir = args.resume
+        resume_path = args.resume if args.resume.endswith('.pth') else os.path.join(args.resume, 'checkpoint_latest.pth')
+        args.save_dir = args.resume if not args.resume.endswith('.pth') else os.path.dirname(args.resume)
     else:
         current_time = datetime.now().strftime("%Y%m%d_%H%M%S")
         args.save_dir = os.path.join(args.save_dir, args.dataset, f"run_{current_time}")
+        resume_path = os.path.join(args.save_dir, 'checkpoint_latest.pth')
 
     os.makedirs(args.save_dir, exist_ok=True)
-    resume_path = os.path.join(args.save_dir, "checkpoint_latest.pth")
 
     if(args.resume):
         start_epoch, best_acc = load_checkpoint(resume_path, model, optimizer, scheduler, scaler, device)
     else:
         start_epoch, best_acc = 0, 0.0
 
-    early_stopping = EarlyStopping(patience=7, delta=0.001)
+    early_stopping = EarlyStopping(patience=7, delta=0.001, mode='max')
 
     csv_path = os.path.join(args.save_dir, "training_log.csv")
     csv_logger = CSVLogger(csv_path, ["epoch", "train_loss", "train_acc", "test_loss", "test_acc", "test_sparsity"])
@@ -75,7 +82,7 @@ def main():
         test_loss, test_acc, test_sparsity = evaluate(model, test_loader, criterion, device, measure_sparsity=True)
         scheduler.step()
 
-        csv_logger.log([epoch +1, train_loss, train_acc, test_acc, test_loss, test_sparsity])
+        csv_logger.log([epoch +1, train_loss, train_acc, test_loss, test_acc, test_sparsity])
 
         is_best = test_acc > best_acc
         best_acc = max(test_acc, best_acc)
@@ -86,6 +93,7 @@ def main():
             'best_acc': best_acc,
             'optimizer': optimizer.state_dict(),
             'scheduler': scheduler.state_dict(),
+            'rng_state': capture_rng_state(),
         }
         if scaler is not None:
             checkpoint_state['scaler'] = scaler.state_dict()
@@ -113,7 +121,7 @@ def main():
                 "epoch": epoch + 1
             })
 
-        early_stopping(test_loss, model)
+        early_stopping(test_acc)
         if early_stopping.early_stop:
             tqdm.write(f"Early stopping triggered at epoch {epoch+1}. Best validation accuracy: {best_acc:.2f}%")
             break
@@ -121,11 +129,11 @@ def main():
     base_path = os.path.join(args.save_dir, f"{args.dataset}_base.pth")
     torch.save(model.state_dict(), base_path)
     
-    quantized_weights = quantize_weights(model, num_bits=8)
+    quantized_weights, quantization_metadata = quantize_weights(model, num_bits=8, return_metadata=True)
     _, _, _ = evaluate(model, test_loader, criterion, device)
     
     quantized_path = os.path.join(args.save_dir, f"{args.dataset}_quantized.pth")
-    torch.save(quantized_weights, quantized_path)
+    torch.save({'weights': quantized_weights, 'metadata': quantization_metadata}, quantized_path)
     print(f"Integer weights (int8) ready for the FPGA saved in : {quantized_path}")
 
     if args.use_wandb:

@@ -1,5 +1,5 @@
 {
-    "architecture": "deep_cnn",
+    "architecture": "SpikingVGG5",
     "params": {
         "in_channels": 2,
         "out_classes": 11

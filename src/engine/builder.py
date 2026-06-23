@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 from torch.optim.lr_scheduler import CosineAnnealingLR
-from src.models.architectures import GenericMLPSNN, DeepConvSNN
+from src.models.architectures import SpikingMLP, CompactSpikingCNN, SpikingVGG5
 from src.data_loaders import get_nmnist_loaders, get_cifar10_loaders, get_dvs_gesture_loaders
 
 DATA_LOADERS = {
@@ -11,8 +11,9 @@ DATA_LOADERS = {
 }
 
 ARCHITECTURES = {
-    'mlp': GenericMLPSNN,
-    'deep_cnn': DeepConvSNN
+    'SpikingMLP': SpikingMLP,
+    'CompactSpikingCNN': CompactSpikingCNN,
+    'SpikingVGG5': SpikingVGG5,
 }
 
 def build_components(dataset, model_config, batch_size, time_steps, lr, epochs, device):

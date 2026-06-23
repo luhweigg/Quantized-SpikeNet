@@ -54,7 +54,8 @@ def evaluate(model, dataloader, criterion, device, measure_sparsity=False):
     
     if measure_sparsity:
         def hook(module, input, output):
-            firing_rates.append(output.detach().mean().item())
+            detached = output.detach()
+            firing_rates.append((detached.sum().item(), detached.numel()))
         
         for m in model.modules():
             if isinstance(m, MemoryModule):
@@ -78,7 +79,9 @@ def evaluate(model, dataloader, criterion, device, measure_sparsity=False):
     if measure_sparsity:
         for h in hooks:
             h.remove()
-        avg_firing_rate = sum(firing_rates) / len(firing_rates) if firing_rates else 0.0
+        total_spikes = sum(spikes for spikes, _ in firing_rates)
+        total_elements = sum(elements for _, elements in firing_rates)
+        avg_firing_rate = total_spikes / total_elements if total_elements else 0.0
         sparsity = (1.0 - avg_firing_rate) * 100
 
     return total_loss / len(dataloader), 100. * correct / total, sparsity
