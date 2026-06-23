@@ -3,7 +3,7 @@ import argparse
 import json
 import torch
 import wandb
-import csv
+from datetime import datetime
 from tqdm import tqdm
 from src.engine import (
     build_components,
@@ -24,6 +24,7 @@ def parse_args():
     parser.add_argument('--lr', type=float, default=1e-3)
     parser.add_argument('--Time', type=int, default=16)
     parser.add_argument('--save_dir', type=str, default='./saved_models')
+    parser.add_argument('--resume', type=str, default=None)
     parser.add_argument('--use_wandb', action='store_true')
     parser.add_argument('--wandb_project', type=str, default='quantized_spikenet')
     return parser.parse_args()
@@ -48,10 +49,19 @@ def main():
     )
 
     args.save_dir = os.path.join(args.save_dir, args.dataset)
+    if args.resume:
+        args.save_dir = args.resume
+    else:
+        current_time = datetime.now().strftime("%Y%m%d_%H%M%S")
+        args.save_dir = os.path.join(args.save_dir, args.dataset, f"run_{current_time}")
+
     os.makedirs(args.save_dir, exist_ok=True)
     resume_path = os.path.join(args.save_dir, "checkpoint_latest.pth")
 
-    start_epoch, best_acc = load_checkpoint(resume_path, model, optimizer, scheduler, scaler, device)
+    if(args.resume):
+        start_epoch, best_acc = load_checkpoint(resume_path, model, optimizer, scheduler, scaler, device)
+    else:
+        start_epoch, best_acc = 0, 0.0
 
     early_stopping = EarlyStopping(patience=7, delta=0.001)
 
