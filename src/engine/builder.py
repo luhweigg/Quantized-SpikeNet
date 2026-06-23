@@ -24,7 +24,7 @@ def build_components(dataset, model_config, batch_size, time_steps, lr, epochs, 
     arch_class = ARCHITECTURES[model_config['architecture']]
     model = arch_class(**model_config['params']).to(device)
 
-    optimizer = torch.optim.AdamW(model.parameters(), lr=lr, weight_decay=1e-4)
+    optimizer = torch.optim.AdamW(model.parameters(), lr=lr, weight_decay=1e-2)
     scheduler = CosineAnnealingLR(optimizer, T_max=epochs)
     criterion = nn.CrossEntropyLoss()
     scaler = torch.amp.GradScaler('cuda') if device.type == 'cuda' else None

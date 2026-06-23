@@ -28,7 +28,7 @@ class DeepConvSNN(nn.Module, ISNNModel):
     """
     Architecture convolutive profonde (type VGG) pour SNN.
     """
-    def __init__(self, in_channels: int, out_classes: int):
+    def __init__(self, in_channels: int, out_classes: int, dropout: float = 0.5):
         super().__init__()
         self.network = nn.Sequential(
             layer.Conv2d(in_channels, 64, kernel_size=3, padding=1, bias=True),
@@ -52,6 +52,7 @@ class DeepConvSNN(nn.Module, ISNNModel):
             layer.MaxPool2d(2, 2),
 
             layer.Flatten(),
+            layer.Dropout(dropout),
             layer.Linear(512 * 4 * 4, out_classes, bias=True),
         )
         functional.set_step_mode(self, step_mode='m')

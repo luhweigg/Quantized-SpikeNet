@@ -1,6 +1,45 @@
 import os
 import shutil
 import torch
+import csv
+
+class CSVLogger:
+    """
+    Simple logger to record metrics to a CSV file.
+    """
+    def __init__(self, filepath, headers):
+        self.filepath = filepath
+        if not os.path.exists(self.filepath):
+            with open(self.filepath, mode='w', newline='') as f:
+                writer = csv.writer(f)
+                writer.writerow(headers)
+
+    def log(self, row):
+        with open(self.filepath, mode='a', newline='') as f:
+            writer = csv.writer(f)
+            writer.writerow(row)
+class EarlyStopping:
+    """
+    Stops training if validation loss doesn't improve after a given patience.
+    """
+    def __init__(self, patience=7, delta=0.0):
+        self.patience = patience
+        self.counter = 0
+        self.best_score = None
+        self.early_stop = False
+        self.delta = delta
+
+    def __call__(self, val_loss, model):
+        score = -val_loss
+        if self.best_score is None:
+            self.best_score = score
+        elif score < self.best_score + self.delta:
+            self.counter += 1
+            if self.counter >= self.patience:
+                self.early_stop = True
+        else:
+            self.best_score = score
+            self.counter = 0
 
 def save_checkpoint(state, is_best, save_dir, filname='checkpoint_latest.pth'):
     """

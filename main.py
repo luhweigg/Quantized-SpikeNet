@@ -3,6 +3,7 @@ import argparse
 import json
 import torch
 import wandb
+import csv
 from tqdm import tqdm
 from src.engine import (
     build_components,
@@ -10,7 +11,9 @@ from src.engine import (
     evaluate,
     quantize_weights,
     save_checkpoint,
-    load_checkpoint
+    load_checkpoint,
+    CSVLogger,
+    EarlyStopping
 )
 
 def parse_args():
@@ -50,12 +53,19 @@ def main():
 
     start_epoch, best_acc = load_checkpoint(resume_path, model, optimizer, scheduler, scaler, device)
 
+    early_stopping = EarlyStopping(patience=7, delta=0.001)
+
+    csv_path = os.path.join(args.save_dir, "training_log.csv")
+    csv_logger = CSVLogger(csv_path, ["epoch", "train_loss", "train_acc", "test_loss", "test_acc", "test_sparsity"])
+
     pbar = tqdm(range(start_epoch, args.epochs), desc="Global Training", initial=start_epoch, total=args.epochs)
     
     for epoch in pbar:
         train_loss, train_acc = train_one_epoch(model, train_loader, optimizer, criterion, device, scaler)
         test_loss, test_acc, test_sparsity = evaluate(model, test_loader, criterion, device, measure_sparsity=True)
         scheduler.step()
+
+        csv_logger.log([epoch +1, train_loss, train_acc, test_acc, test_loss, test_sparsity])
 
         is_best = test_acc > best_acc
         best_acc = max(test_acc, best_acc)
@@ -92,6 +102,11 @@ def main():
                 "test/sparsity": test_sparsity,
                 "epoch": epoch + 1
             })
+
+        early_stopping(test_loss, model)
+        if early_stopping.early_stop:
+            tqdm.write(f"Early stopping triggered at epoch {epoch+1}. Best validation accuracy: {best_acc:.2f}%")
+            break
 
     base_path = os.path.join(args.save_dir, f"{args.dataset}_base.pth")
     torch.save(model.state_dict(), base_path)
