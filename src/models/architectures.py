@@ -60,7 +60,7 @@ class SpikingVGG5(nn.Module, ISNNModel):
     """
     Deep convolutional SNN architecture (5 block, VGG-type) for SNN.
     """
-    def __init__(self, in_channels: int, out_classes: int, dropout: float = 0.5):
+    def __init__(self, in_channels: int, out_classes: int, dropout: float = 0.3):
         super().__init__()
         self.network = nn.Sequential(
             layer.Conv2d(in_channels, 64, kernel_size=3, padding=1, bias=True),

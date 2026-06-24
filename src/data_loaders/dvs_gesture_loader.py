@@ -10,20 +10,26 @@ def custom_collate_fn(batch):
 
 def get_dvs_gesture_loaders(batch_size=64, n_time_bins=10, num_workers=4):
     """
-    Get DVS Gesture data loaders.
+    Get DVS Gesture data loaders with dynamic event-level data augmentation.
     """
     tonic.datasets.DVSGesture.train_url = "https://ndownloader.figshare.com/files/38022171"
     tonic.datasets.DVSGesture.test_url = "https://ndownloader.figshare.com/files/38020584"
+    sensor_size = (128, 128, 2)
 
-    frame_transform = transforms.Compose([
-        transforms.ToFrame(sensor_size=(128, 128, 2), n_time_bins=n_time_bins)
+    train_set = tonic.datasets.DVSGesture(save_to='./data', train=True)
+    test_set = tonic.datasets.DVSGesture(save_to='./data', train=False)
+
+    train_transform = transforms.Compose([
+        transforms.DropEvent(p=0.1),
+        transforms.ToFrame(sensor_size=sensor_size, n_time_bins=n_time_bins)
     ])
 
-    train_set = tonic.datasets.DVSGesture(save_to='./data', train=True, transform=frame_transform)
-    test_set = tonic.datasets.DVSGesture(save_to='./data', train=False, transform=frame_transform)
+    test_transform = transforms.Compose([
+        transforms.ToFrame(sensor_size=sensor_size, n_time_bins=n_time_bins)
+    ])
 
-    cached_train = tonic.DiskCachedDataset(train_set, cache_path='./data/cache/dvs_gesture/train')
-    cached_test = tonic.DiskCachedDataset(test_set, cache_path='./data/cache/dvs_gesture/test')
+    cached_train = tonic.DiskCachedDataset(train_set, cache_path='./data/cache/dvs_gesture/raw_train', transform=train_transform)
+    cached_test = tonic.DiskCachedDataset(test_set, cache_path='./data/cache/dvs_gesture/raw_test', transform=test_transform)
 
     train_loader = DataLoader(
         cached_train, 
