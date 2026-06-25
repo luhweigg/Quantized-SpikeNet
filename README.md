@@ -98,7 +98,7 @@ saved_models/
         ├── checkpoint_latest.pth           # Full state for easy resumption
         ├── model_best.pth                  # Best performing model 
         ├── dvs_gesture_base.pth            # Final floating-point weights
-        ├── dvs_gesture_quantized.pth       # 🎯 INT8 weights ready for FPGA
+        ├── dvs_gesture_quantized.pth       # INT8 weights ready for FPGA
         └── training_log_SpikingVGG5.csv    # Complete epoch-by-epoch metrics
 ```
 ---

@@ -18,3 +18,8 @@ filterwarnings = [
     "ignore::SyntaxWarning:spikingjelly.*",
     "ignore::SyntaxWarning:tonic.*"
 ]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.15.19",
+]
