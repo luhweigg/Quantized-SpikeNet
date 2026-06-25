@@ -49,10 +49,16 @@ def test_cifar10_dvs_split_is_deterministic(monkeypatch):
                 sample = self.transform(sample)
             return sample, index
 
-    monkeypatch.setattr(cifar10_dvs_loader.tonic.datasets, "CIFAR10DVS", DummyCIFAR10DVS)
+    monkeypatch.setattr(
+        cifar10_dvs_loader.tonic.datasets, "CIFAR10DVS", DummyCIFAR10DVS
+    )
 
-    train_loader_a, test_loader_a = cifar10_dvs_loader.get_cifar10_loaders(batch_size=2, n_time_bins=4, num_workers=0, split_seed=123)
-    train_loader_b, test_loader_b = cifar10_dvs_loader.get_cifar10_loaders(batch_size=2, n_time_bins=4, num_workers=0, split_seed=123)
+    train_loader_a, test_loader_a = cifar10_dvs_loader.get_cifar10_loaders(
+        batch_size=2, n_time_bins=4, num_workers=0, split_seed=123
+    )
+    train_loader_b, test_loader_b = cifar10_dvs_loader.get_cifar10_loaders(
+        batch_size=2, n_time_bins=4, num_workers=0, split_seed=123
+    )
 
     assert train_loader_a.dataset.indices == train_loader_b.dataset.indices
     assert test_loader_a.dataset.indices == test_loader_b.dataset.indices

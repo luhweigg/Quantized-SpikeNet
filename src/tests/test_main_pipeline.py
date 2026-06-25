@@ -78,9 +78,7 @@ def test_main_resume_from_checkpoint_path(monkeypatch, tmp_path):
         return 0.4, 51.0, 90.0
 
     def fake_quantize(*_args, **_kwargs):
-        return {
-            "weight": torch.tensor([1], dtype=torch.int8)
-        }, {
+        return {"weight": torch.tensor([1], dtype=torch.int8)}, {
             "weight": {
                 "scale": 1.0,
                 "zero_point": 0,
@@ -170,8 +168,20 @@ def test_main_quantized_export_contract(monkeypatch, tmp_path):
             "weight": torch.tensor([1, -2], dtype=torch.int8),
             "bias": torch.tensor([0], dtype=torch.int8),
         }, {
-            "weight": {"scale": 0.01, "zero_point": 0, "num_bits": 8, "qmin": -128, "qmax": 127},
-            "bias": {"scale": 0.02, "zero_point": 0, "num_bits": 8, "qmin": -128, "qmax": 127},
+            "weight": {
+                "scale": 0.01,
+                "zero_point": 0,
+                "num_bits": 8,
+                "qmin": -128,
+                "qmax": 127,
+            },
+            "bias": {
+                "scale": 0.02,
+                "zero_point": 0,
+                "num_bits": 8,
+                "qmin": -128,
+                "qmax": 127,
+            },
         }
 
     monkeypatch.setattr(training_main, "build_components", _fake_build_components)
