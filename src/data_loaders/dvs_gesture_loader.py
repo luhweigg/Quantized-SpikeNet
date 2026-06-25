@@ -1,7 +1,7 @@
 import torch
 import tonic
 import tonic.transforms as transforms
-from torch.utils.data import random_split, DataLoader
+from torch.utils.data import DataLoader
 
 
 def custom_collate_fn(batch):
