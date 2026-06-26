@@ -30,9 +30,9 @@ def build_components(dataset, model_config, batch_size, time_steps, lr, epochs, 
     arch_class = ARCHITECTURES[model_config["architecture"]]
     model = arch_class(**model_config["params"]).to(device)
 
-    optimizer = torch.optim.AdamW(model.parameters(), lr=lr, weight_decay=1e-3)
+    optimizer = torch.optim.AdamW(model.parameters(), lr=lr, weight_decay=1e-2)
     scheduler = CosineAnnealingLR(optimizer, T_max=epochs)
-    criterion = nn.CrossEntropyLoss()
+    criterion = nn.CrossEntropyLoss(label_smoothing=0.1)
     scaler = None
 
     return model, train_loader, test_loader, optimizer, scheduler, criterion, scaler
