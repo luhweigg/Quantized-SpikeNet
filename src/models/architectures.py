@@ -96,6 +96,7 @@ class SpikingVGG5(nn.Module, ISNNModel):
     def reset_states(self) -> None:
         functional.reset_net(self)
 
+
 class SpikingVGG11(nn.Module, ISNNModel):
     """
     Deeper VGG-11 SNN architecture adapted for complex backgrounds and high ego-motion (N-EPIC Kitchens).

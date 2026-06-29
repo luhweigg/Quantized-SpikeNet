@@ -15,7 +15,7 @@ def get_nmnist_loaders(batch_size=64, n_time_bins=10, num_workers=4):
     train_set = tonic.datasets.NMNIST(
         save_to="./data", train=True, transform=frame_transform
     )
-    
+
     test_set = tonic.datasets.NMNIST(
         save_to="./data", train=False, transform=frame_transform
     )

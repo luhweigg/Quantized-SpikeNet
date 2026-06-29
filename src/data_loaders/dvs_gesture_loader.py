@@ -41,7 +41,7 @@ def get_dvs_gesture_loaders(batch_size=64, n_time_bins=10, num_workers=4):
         cache_path="./data/cache/dvs_gesture/raw_train",
         transform=train_transform,
     )
-    
+
     cached_test = tonic.DiskCachedDataset(
         test_set,
         cache_path="./data/cache/dvs_gesture/raw_test",
