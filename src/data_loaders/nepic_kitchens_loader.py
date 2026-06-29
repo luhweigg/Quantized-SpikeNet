@@ -9,10 +9,10 @@ class NEPICKitchens(Dataset):
     """
     Dataset loader for N-EPIC Kitchens pre-processed voxel grids.
     """
-
-    def __init__(self, root_dir: str, split: str = "train"):
+    def __init__(self, root_dir: str, split: str = "train", time_steps: int = 16):
         self.root_dir = root_dir
         self.split = split
+        self.time_steps = time_steps
         self.samples = []
 
         domains = ["D1", "D2", "D3"]
@@ -53,6 +53,14 @@ class NEPICKitchens(Dataset):
         elif tensor_data.ndim == 4 and tensor_data.shape[0] == 2:
             tensor_data = tensor_data.permute(1, 0, 2, 3)
 
+        t_dim = tensor_data.shape[0]
+        if t_dim > self.time_steps:
+            indices = torch.linspace(0, t_dim - 1, self.time_steps).long()
+            tensor_data = tensor_data[indices]
+        elif t_dim < self.time_steps:
+            pad = torch.zeros((self.time_steps - t_dim, *tensor_data.shape[1:]))
+            tensor_data = torch.cat((tensor_data, pad), dim=0)
+
         return tensor_data, label
 
 
@@ -68,8 +76,8 @@ def get_nepic_kitchens_loaders(batch_size: int, time_steps: int, num_workers: in
     """
     data_dir = "./data/N-EPIC-Kitchens"
 
-    train_set = NEPICKitchens(root_dir=data_dir, split="train")
-    test_set = NEPICKitchens(root_dir=data_dir, split="test")
+    train_set = NEPICKitchens(root_dir=data_dir, split="train", time_steps=time_steps)
+    test_set = NEPICKitchens(root_dir=data_dir, split="test", time_steps=time_steps)
 
     train_loader = DataLoader(
         train_set,
