@@ -24,7 +24,7 @@ def parse_args():
         "--dataset",
         type=str,
         default="nmnist",
-        choices=["nmnist", "cifar10", "dvs_gesture"],
+        choices=["nmnist", "cifar10", "dvs_gesture", "nepic_kitchens"],
     )
     parser.add_argument("--epochs", type=int, default=20)
     parser.add_argument("--batch_size", type=int, default=64)
