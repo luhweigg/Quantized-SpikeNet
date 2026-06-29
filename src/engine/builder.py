@@ -1,25 +1,27 @@
 import torch
 import torch.nn as nn
 from torch.optim.lr_scheduler import CosineAnnealingLR
-from src.models.architectures import SpikingMLP, CompactSpikingCNN, SpikingVGG5
+from src.models.architectures import SpikingMLP, CompactSpikingCNN, SpikingVGG5, SpikingVGG11
 from src.data_loaders import (
     get_nmnist_loaders,
     get_cifar10_loaders,
     get_dvs_gesture_loaders,
+    get_nepic_kitchens_loaders,
 )
 
 DATA_LOADERS = {
     "nmnist": get_nmnist_loaders,
     "cifar10": get_cifar10_loaders,
     "dvs_gesture": get_dvs_gesture_loaders,
+    "nepic_kitchens": get_nepic_kitchens_loaders,
 }
 
 ARCHITECTURES = {
     "SpikingMLP": SpikingMLP,
     "CompactSpikingCNN": CompactSpikingCNN,
     "SpikingVGG5": SpikingVGG5,
+    "SpikingVGG11": SpikingVGG11,
 }
-
 
 def build_components(dataset, model_config, batch_size, time_steps, lr, epochs, device):
     if dataset not in DATA_LOADERS:

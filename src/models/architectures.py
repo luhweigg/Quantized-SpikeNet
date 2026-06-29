@@ -95,3 +95,43 @@ class SpikingVGG5(nn.Module, ISNNModel):
 
     def reset_states(self) -> None:
         functional.reset_net(self)
+
+class SpikingVGG11(nn.Module, ISNNModel):
+    """
+    Deeper VGG-11 SNN architecture adapted for complex backgrounds and high ego-motion (N-EPIC Kitchens).
+    """
+
+    def __init__(self, in_channels: int, out_classes: int, dropout: float = 0.5):
+        super().__init__()
+        self.network = nn.Sequential(
+            layer.Conv2d(in_channels, 64, kernel_size=3, padding=1, bias=True),
+            neuron.LIFNode(),
+            layer.MaxPool2d(2, 2),
+            layer.Conv2d(64, 128, kernel_size=3, padding=1, bias=True),
+            neuron.LIFNode(),
+            layer.MaxPool2d(2, 2),
+            layer.Conv2d(128, 256, kernel_size=3, padding=1, bias=True),
+            neuron.LIFNode(),
+            layer.Conv2d(256, 256, kernel_size=3, padding=1, bias=True),
+            neuron.LIFNode(),
+            layer.MaxPool2d(2, 2),
+            layer.Conv2d(256, 512, kernel_size=3, padding=1, bias=True),
+            neuron.LIFNode(),
+            layer.Conv2d(512, 512, kernel_size=3, padding=1, bias=True),
+            neuron.LIFNode(),
+            layer.MaxPool2d(2, 2),
+            layer.AdaptiveAvgPool2d((1, 1)),
+            layer.Flatten(),
+            layer.Dropout(dropout),
+            layer.Linear(512, 4096, bias=True),
+            neuron.LIFNode(),
+            layer.Dropout(dropout),
+            layer.Linear(4096, out_classes, bias=True),
+        )
+        functional.set_step_mode(self, step_mode="m")
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        return self.network(x).mean(dim=0)
+
+    def reset_states(self) -> None:
+        functional.reset_net(self)

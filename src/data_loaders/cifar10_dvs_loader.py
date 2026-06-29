@@ -34,6 +34,7 @@ def get_cifar10_loaders(batch_size=64, n_time_bins=10, num_workers=4, split_seed
         num_workers=num_workers,
         pin_memory=True,
     )
+    
     test_loader = torch.utils.data.DataLoader(
         test_set,
         batch_size=batch_size,
