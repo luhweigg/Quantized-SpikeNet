@@ -75,7 +75,7 @@ def test_main_resume_from_checkpoint_path(monkeypatch, tmp_path):
         return 0.5, 50.0
 
     def fake_evaluate(*_args, **_kwargs):
-        return 0.4, 51.0, 90.0
+        return 0.4, 51.0, 90.0, 0.001, 0.1
 
     def fake_quantize(*_args, **_kwargs):
         return {"weight": torch.tensor([1], dtype=torch.int8)}, {
@@ -161,7 +161,7 @@ def test_main_quantized_export_contract(monkeypatch, tmp_path):
         return 0.6, 45.0
 
     def fake_evaluate(*_args, **_kwargs):
-        return 0.5, 46.0, 88.0
+        return 0.5, 46.0, 88.0, 0.001, 0.1
 
     def fake_quantize(*_args, **_kwargs):
         return {
