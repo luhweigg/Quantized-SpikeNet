@@ -111,8 +111,8 @@ def main():
             "test_loss",
             "test_acc",
             "test_sparsity",
-            "energy_joules",
-            "power_watts",
+            "energy_nano_joules",
+            "power_nano_watts",
         ],
     )
 
@@ -140,8 +140,8 @@ def main():
                 test_loss,
                 test_acc,
                 test_sparsity,
-                energy_joules,
-                power_watts,
+                energy_joules * 1e9,
+                power_watts * 1e9,
             ]
         )
 
@@ -184,8 +184,8 @@ def main():
                     "test/loss": test_loss,
                     "test/acc": test_acc,
                     "test/sparsity": test_sparsity,
-                    "test/energy_joules": energy_joules,
-                    "test/power_watts": power_watts,
+                    "test/energy_joules": energy_joules * 1e9,
+                    "test/power_watts": power_watts * 1e9,
                     "epoch": epoch + 1,
                 }
             )
