@@ -104,7 +104,16 @@ def main():
     csv_path = os.path.join(args.save_dir, "training_log.csv")
     csv_logger = CSVLogger(
         csv_path,
-        ["epoch", "train_loss", "train_acc", "test_loss", "test_acc", "test_sparsity"],
+        [
+            "epoch",
+            "train_loss",
+            "train_acc",
+            "test_loss",
+            "test_acc",
+            "test_sparsity",
+            "energy_joules",
+            "power_watts",
+        ],
     )
 
     pbar = tqdm(
@@ -118,13 +127,22 @@ def main():
         train_loss, train_acc = train_one_epoch(
             model, train_loader, optimizer, criterion, device, scaler
         )
-        test_loss, test_acc, test_sparsity = evaluate(
-            model, test_loader, criterion, device, measure_sparsity=True
+        test_loss, test_acc, test_sparsity, energy_joules, power_watts = evaluate(
+            model, test_loader, criterion, device, measure_consumption=True
         )
         scheduler.step()
 
         csv_logger.log(
-            [epoch + 1, train_loss, train_acc, test_loss, test_acc, test_sparsity]
+            [
+                epoch + 1,
+                train_loss,
+                train_acc,
+                test_loss,
+                test_acc,
+                test_sparsity,
+                energy_joules,
+                power_watts,
+            ]
         )
 
         is_best = test_acc > best_acc
@@ -166,6 +184,8 @@ def main():
                     "test/loss": test_loss,
                     "test/acc": test_acc,
                     "test/sparsity": test_sparsity,
+                    "test/energy_joules": energy_joules,
+                    "test/power_watts": power_watts,
                     "epoch": epoch + 1,
                 }
             )
@@ -183,7 +203,7 @@ def main():
     quantized_weights, quantization_metadata = quantize_weights(
         model, num_bits=8, return_metadata=True
     )
-    _, _, _ = evaluate(model, test_loader, criterion, device)
+    _, _, _, _, _ = evaluate(model, test_loader, criterion, device)
 
     quantized_path = os.path.join(args.save_dir, f"{args.dataset}_quantized.pth")
     torch.save(

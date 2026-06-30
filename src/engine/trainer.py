@@ -45,9 +45,18 @@ def train_one_epoch(model, dataloader, optimizer, criterion, device, scaler=None
     return total_loss / len(dataloader), 100.0 * correct / total
 
 
-def evaluate(model, dataloader, criterion, device, measure_sparsity=False):
+def evaluate(
+    model,
+    dataloader,
+    criterion,
+    device,
+    measure_consumption=False,
+    energy_per_spike=0.9e-12,
+    time_per_inference=0.01,
+    static_power=0.0,
+):
     """
-    Evaluate the model on the test set.
+    Evaluate the model on the test set and estimate sparsity, energy (Joules) and power (Watts).
     """
     model.eval()
     total_loss = 0.0
@@ -57,7 +66,7 @@ def evaluate(model, dataloader, criterion, device, measure_sparsity=False):
     firing_rates = []
     hooks = []
 
-    if measure_sparsity:
+    if measure_consumption:
 
         def hook(module, input, output):
             detached = output.detach()
@@ -82,12 +91,27 @@ def evaluate(model, dataloader, criterion, device, measure_sparsity=False):
             correct += predicted.eq(targets).sum().item()
 
     sparsity = 0.0
-    if measure_sparsity:
+    power_watts = 0.0
+    energy_joules = 0.0
+
+    if measure_consumption:
         for h in hooks:
             h.remove()
         total_spikes = sum(spikes for spikes, _ in firing_rates)
         total_elements = sum(elements for _, elements in firing_rates)
-        avg_firing_rate = total_spikes / total_elements if total_elements else 0.0
-        sparsity = (1.0 - avg_firing_rate) * 100
 
-    return total_loss / len(dataloader), 100.0 * correct / total, sparsity
+        if total_elements > 0:
+            avg_firing_rate = total_spikes / total_elements
+            sparsity = (1.0 - avg_firing_rate) * 100
+
+            spikes_per_inference = total_spikes / total if total > 0 else 0
+            energy_joules = spikes_per_inference * energy_per_spike
+            power_watts = (energy_joules / time_per_inference) + static_power
+
+    return (
+        total_loss / len(dataloader),
+        100.0 * correct / total,
+        sparsity,
+        energy_joules,
+        power_watts,
+    )
