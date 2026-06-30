@@ -9,6 +9,7 @@ class NEPICKitchens(Dataset):
     """
     Dataset loader for N-EPIC Kitchens pre-processed voxel grids.
     """
+
     def __init__(self, root_dir: str, split: str = "train", time_steps: int = 16):
         self.root_dir = root_dir
         self.split = split
