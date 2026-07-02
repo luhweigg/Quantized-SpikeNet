@@ -115,3 +115,23 @@ def evaluate(
         energy_joules,
         power_watts,
     )
+
+def train_step(model, criterion, optimizer, x_i, x_j):
+    optimizer.zero_grad()
+
+    x = torch.cat((x_i, x_j), dim=0)
+    
+    f, z = model(x)
+    
+    B = z.shape[1]
+    b = B // 2
+    
+    z_i = z[:, :b, ...]
+    z_j = z[:, b:, ...]
+
+    loss = criterion(z_i, z_j)
+    
+    loss.backward()
+    optimizer.step()
+
+    return loss.item()
