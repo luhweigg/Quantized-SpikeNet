@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-from src.models import SpikingMLP, SpikingVGG5
+from src.models import SpikingMLP, spiking_vgg5
 from src.engine import train_one_epoch
 
 
@@ -45,7 +45,7 @@ def test_overfit_single_batch_DVSGesture():
     """
     torch.manual_seed(67)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model = SpikingVGG5(in_channels=2, out_classes=11).to(device)
+    model = spiking_vgg5.SpikingVGG5(in_channels=2, out_classes=11).to(device)
 
     batch_size = 2
     T = 2
