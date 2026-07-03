@@ -1,5 +1,6 @@
 import torch
 from tqdm import tqdm
+from spikingjelly.activation_based import functional
 from spikingjelly.activation_based.base import MemoryModule
 
 
@@ -35,7 +36,7 @@ def train_one_epoch(model, dataloader, optimizer, criterion, device, scaler=None
             torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
             optimizer.step()
 
-        model.reset_states()
+        functional.reset_net(model)
 
         total_loss += loss.item()
         _, predicted = outputs.max(1)

@@ -50,12 +50,12 @@ class SpikingResNet(nn.Module):
     """
     Generic Spiking ResNet architecture adapted for S4 SSL temporal dynamics.
     """
-    def __init__(self, block, num_blocks, num_classes=10, neuron_type="LIF", **neuron_kwargs):
+    def __init__(self, block, num_blocks, in_channels=3, num_classes=10, neuron_type="LIF", **neuron_kwargs):
         super().__init__()
         self.in_channels = 64
         
         # Initial convolutional layer. No MaxPool here as it degrades early SNN information (especially on low-res images like CIFAR).
-        self.conv1 = SpikingConvBlock(3, 64, kernel_size=3, stride=1, padding=1, neuron_type=neuron_type, **neuron_kwargs)
+        self.conv1 = SpikingConvBlock(in_channels, 64, kernel_size=3, stride=1, padding=1, neuron_type=neuron_type, **neuron_kwargs)
         
         self.layer1 = self._make_layer(block, 64, num_blocks[0], stride=1, neuron_type=neuron_type, **neuron_kwargs)
         self.layer2 = self._make_layer(block, 128, num_blocks[1], stride=2, neuron_type=neuron_type, **neuron_kwargs)
@@ -87,14 +87,14 @@ class SpikingResNet(nn.Module):
         x = self.linear(x)
         return x
 
-def spiking_resnet18(num_classes=10, neuron_type="LIF", **kwargs):
-    return SpikingResNet(SpikingBasicBlock, [2, 2, 2, 2], num_classes, neuron_type, **kwargs)
+def spiking_resnet18(in_channels=3, num_classes=10, neuron_type="LIF", **kwargs):
+    return SpikingResNet(SpikingBasicBlock, [2, 2, 2, 2], in_channels, num_classes, neuron_type, **kwargs)
 
-def spiking_resnet34(num_classes=10, neuron_type="LIF", **kwargs):
-    return SpikingResNet(SpikingBasicBlock, [3, 4, 6, 3], num_classes, neuron_type, **kwargs)
+def spiking_resnet34(in_channels=3, num_classes=10, neuron_type="LIF", **kwargs):
+    return SpikingResNet(SpikingBasicBlock, [3, 4, 6, 3], in_channels, num_classes, neuron_type, **kwargs)
 
-def spiking_resnet50(num_classes=10, neuron_type="LIF", **kwargs):
-    return SpikingResNet(SpikingBottleneck, [3, 4, 6, 3], num_classes, neuron_type, **kwargs)
+def spiking_resnet50(in_channels=3, num_classes=10, neuron_type="LIF", **kwargs):
+    return SpikingResNet(SpikingBottleneck, [3, 4, 6, 3], in_channels, num_classes, neuron_type, **kwargs)
 
-def spiking_resnet101(num_classes=10, neuron_type="LIF", **kwargs):
-    return SpikingResNet(SpikingBottleneck, [3, 4, 23, 3], num_classes, neuron_type, **kwargs)
+def spiking_resnet101(in_channels=3, num_classes=10, neuron_type="LIF", **kwargs):
+    return SpikingResNet(SpikingBottleneck, [3, 4, 23, 3], in_channels, num_classes, neuron_type, **kwargs)

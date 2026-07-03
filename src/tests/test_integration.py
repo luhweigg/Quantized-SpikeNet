@@ -6,7 +6,7 @@ from src.models import SpikingMLP, CompactSpikingCNN, spiking_vgg5
 
 
 def test_deepconv_snn_accepts_downsampled_cifar10_shape():
-    model = spiking_vgg5(in_channels=2, out_classes=10)
+    model = spiking_vgg5(in_channels=2, num_classes=10)
     x = torch.zeros(4, 2, 2, 32, 32)
 
     with torch.no_grad():
@@ -65,8 +65,8 @@ def test_cifar10_dvs_split_is_deterministic(monkeypatch):
 
 
 def test_cifar_compact_and_deep_shapes_match_for_cifar10():
-    compact = CompactSpikingCNN(in_channels=2, out_classes=10)
-    deep = spiking_vgg5(in_channels=2, out_classes=10)
+    compact = CompactSpikingCNN(in_channels=2, num_classes=10)
+    deep = spiking_vgg5(in_channels=2, num_classes=10)
     x = torch.zeros(4, 2, 2, 32, 32)
 
     with torch.no_grad():
@@ -78,8 +78,8 @@ def test_cifar_compact_and_deep_shapes_match_for_cifar10():
 
 
 def test_cifar_compact_has_fewer_parameters_than_deep():
-    compact = CompactSpikingCNN(in_channels=2, out_classes=10)
-    deep = spiking_vgg5(in_channels=2, out_classes=10)
+    compact = CompactSpikingCNN(in_channels=2, num_classes=10)
+    deep = spiking_vgg5(in_channels=2, num_classes=10)
 
     compact_params = sum(p.numel() for p in compact.parameters())
     deep_params = sum(p.numel() for p in deep.parameters())

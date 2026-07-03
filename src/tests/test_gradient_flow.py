@@ -56,7 +56,7 @@ def test_gradient_flow_DVSGesture():
     """
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     torch.manual_seed(67)
-    model = spiking_vgg5(in_channels=2, out_classes=11).to(device)
+    model = spiking_vgg5(in_channels=2, num_classes=11).to(device)
 
     batch_size, T, C, H, W = 2, 4, 2, 128, 128
     events = (torch.rand(T, batch_size, C, H, W) > 0.9).float().to(device)

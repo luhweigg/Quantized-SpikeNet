@@ -1,5 +1,6 @@
 import pytest
 import torch
+from spikingjelly.activation_based import functional
 from src.models import SpikingMLP, spiking_vgg5
 
 
@@ -11,7 +12,7 @@ from src.models import SpikingMLP, spiking_vgg5
             {"input_size": 2312, "hidden_size": 256, "output_size": 10},
             (16, 2, 2, 34, 34),
         ),
-        (spiking_vgg5, {"in_channels": 2, "out_classes": 11}, (4, 2, 3, 128, 128)),
+        (spiking_vgg5, {"in_channels": 2, "num_classes": 11}, (4, 2, 2, 128, 128)),
     ],
 )
 def test_eval_mode_determinism_and_regularization(
@@ -35,7 +36,7 @@ def test_eval_mode_determinism_and_regularization(
 
     model.eval()
     out_eval_1 = model(x)
-    model.reset_states()
+    functional.reset_net(model)
     out_eval_2 = model(x)
 
     assert torch.equal(out_eval_1, out_eval_2), (
