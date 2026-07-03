@@ -17,7 +17,6 @@ from src.engine import (
     EarlyStopping,
 )
 
-
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -26,6 +25,8 @@ def parse_args():
         default="nmnist",
         choices=["nmnist", "cifar10", "dvs_gesture", "nepic_kitchens"],
     )
+    parser.add_argument("--model", type=str, default=None)
+    parser.add_argument("--neuron_type", type=str, default="LIF", choices=["LIF", "MixedLIF"])
     parser.add_argument("--epochs", type=int, default=20)
     parser.add_argument("--batch_size", type=int, default=64)
     parser.add_argument("--lr", type=float, default=1e-3)
@@ -36,17 +37,20 @@ def parse_args():
     parser.add_argument("--wandb_project", type=str, default="quantized_spikenet")
     return parser.parse_args()
 
-
 def main():
     args = parse_args()
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    print(
-        f"Device: {device} | Dataset: {args.dataset} | Epochs: {args.epochs} | Batch Size: {args.batch_size} | LR: {args.lr} | Time: {args.Time}"
-    )
 
     config_path = os.path.join("configs", f"{args.dataset}.json")
     with open(config_path, "r") as f:
         model_config = json.load(f)
+
+    if args.model is None:
+        args.model = model_config.get("architecture", "SpikingVGG11")
+
+    print(
+        f"Device: {device} | Dataset: {args.dataset} | Model: {args.model} | Neuron: {args.neuron_type} | Epochs: {args.epochs} | Batch Size: {args.batch_size} | LR: {args.lr} | Time: {args.Time}"
+    )
 
     if args.use_wandb:
         wandb.init(project=args.wandb_project, config={**vars(args), **model_config})
@@ -65,6 +69,8 @@ def main():
     model, train_loader, test_loader, optimizer, scheduler, criterion, scaler = (
         build_components(
             args.dataset,
+            args.model,
+            args.neuron_type,
             model_config,
             args.batch_size,
             args.Time,
@@ -214,7 +220,6 @@ def main():
 
     if args.use_wandb:
         wandb.finish()
-
 
 if __name__ == "__main__":
     main()
