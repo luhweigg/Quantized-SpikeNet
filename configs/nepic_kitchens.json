@@ -2,6 +2,6 @@
     "architecture": "SpikingVGG11",
     "params": {
         "in_channels": 3,
-        "out_classes": 8
+        "num_classes": 8
     }
 }

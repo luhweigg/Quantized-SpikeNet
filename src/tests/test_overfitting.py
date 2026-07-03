@@ -9,7 +9,7 @@ from src.models import SpikingMLP, spiking_vgg5
     [
         (
             SpikingMLP,
-            {"input_size": 2312, "hidden_size": 256, "output_size": 10},
+            {"input_size": 2312, "hidden_size": 256, "num_classes": 10},
             (16, 2, 2, 34, 34),
         ),
         (spiking_vgg5, {"in_channels": 2, "num_classes": 11}, (4, 2, 2, 128, 128)),

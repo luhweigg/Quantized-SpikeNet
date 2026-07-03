@@ -2,6 +2,6 @@
     "architecture": "CompactSpikingCNN",
     "params": {
         "in_channels": 2,
-        "out_classes": 10
+        "num_classes": 10
     }
 }

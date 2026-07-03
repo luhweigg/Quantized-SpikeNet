@@ -3,6 +3,6 @@
     "params": {
         "input_size": 2312,
         "hidden_size": 256,
-        "output_size": 10
+        "num_classes": 10
     }
 }

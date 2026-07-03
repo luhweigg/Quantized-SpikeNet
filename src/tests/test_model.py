@@ -11,7 +11,7 @@ def test_overfit_single_batch_NMNIST():
     """
     torch.manual_seed(67)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model = SpikingMLP(input_size=2312, hidden_size=256, output_size=10).to(device)
+    model = SpikingMLP(input_size=2312, hidden_size=256, num_classes=10).to(device)
 
     batch_size = 4
     T = 16

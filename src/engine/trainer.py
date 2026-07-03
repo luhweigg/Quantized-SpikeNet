@@ -84,7 +84,7 @@ def evaluate(
             outputs = model(events)
             loss = criterion(outputs, targets)
 
-            model.reset_states()
+            functional.reset_net(model)
 
             total_loss += loss.item()
             _, predicted = outputs.max(1)

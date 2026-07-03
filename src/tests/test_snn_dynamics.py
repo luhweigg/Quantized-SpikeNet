@@ -9,7 +9,7 @@ def test_snn_state_reset():
     functional.reset_net() properly clears this temporal memory between batches.
     """
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model = SpikingMLP(input_size=2312, hidden_size=256, output_size=10).to(device)
+    model = SpikingMLP(input_size=2312, hidden_size=256, num_classes=10).to(device)
     model.eval()
 
     batch_size, T, C, H, W = 2, 16, 2, 34, 34
@@ -35,7 +35,7 @@ def test_snn_sparsity_bounds():
     Verify that the sparsity of the SNN remains within reasonable bounds.
     """
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model = SpikingMLP(input_size=2312, hidden_size=256, output_size=10).to(device)
+    model = SpikingMLP(input_size=2312, hidden_size=256, num_classes=10).to(device)
     model.eval()
 
     batch_size, T, C, H, W = 4, 16, 2, 34, 34
@@ -76,7 +76,7 @@ def test_deterministic_inference():
     provided the network state is reset between inferences.
     """
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model = SpikingMLP(input_size=2312, hidden_size=256, output_size=10).to(device)
+    model = SpikingMLP(input_size=2312, hidden_size=256, num_classes=10).to(device)
     model.eval()
 
     batch_size, T, C, H, W = 2, 16, 2, 34, 34
@@ -96,7 +96,7 @@ def test_output_tensor_shape():
     Verify that the final output tensor shape matches (Batch, Num_Classes) regardless of the time steps.
     """
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model = SpikingMLP(input_size=2312, hidden_size=256, output_size=10).to(device)
+    model = SpikingMLP(input_size=2312, hidden_size=256, num_classes=10).to(device)
     model.eval()
 
     batch_size = 8

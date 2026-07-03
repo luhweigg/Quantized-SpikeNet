@@ -16,7 +16,7 @@ def test_deepconv_snn_accepts_downsampled_cifar10_shape():
 
 
 def test_quantization_returns_metadata():
-    model = SpikingMLP(input_size=2312, hidden_size=256, output_size=10)
+    model = SpikingMLP(input_size=2312, hidden_size=256, num_classes=10)
 
     with torch.no_grad():
         for parameter in model.parameters():

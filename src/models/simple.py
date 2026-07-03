@@ -9,13 +9,13 @@ class SpikingMLP(nn.Module):
     """
     Simple MLP architecture for SNN, adapted with NeuronFactory.
     """
-    def __init__(self, input_size: int, hidden_size: int, output_size: int, dropout: float = 0.5, neuron_type: str = "LIF", **neuron_kwargs):
+    def __init__(self, input_size: int, hidden_size: int, num_classes: int, dropout: float = 0.5, neuron_type: str = "LIF", **neuron_kwargs):
         super().__init__()
         self.network = nn.Sequential(
             layer.Flatten(),
             SpikingLinearBlock(input_size, hidden_size, neuron_type=neuron_type, **neuron_kwargs),
             layer.Dropout(dropout),
-            layer.Linear(hidden_size, output_size, bias=True)
+            layer.Linear(hidden_size, num_classes, bias=True)
         )
         functional.set_step_mode(self, step_mode="m")
 
