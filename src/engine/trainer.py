@@ -3,7 +3,9 @@ from tqdm import tqdm
 from spikingjelly.activation_based.base import MemoryModule
 
 
-def train_one_epoch(model, dataloader, optimizer, criterion, device, scaler=None):
+def train_one_epoch(
+    model, dataloader, optimizer, criterion, device, scaler=None, accumulation_steps=4
+):
     """
     Train the model for one epoch.
     """
@@ -12,28 +14,41 @@ def train_one_epoch(model, dataloader, optimizer, criterion, device, scaler=None
     correct = 0
     total = 0
 
-    pbar = tqdm(dataloader, desc="Epoch", leave=False)
-    for events, targets in pbar:
-        events, targets = events.to(device, dtype=torch.float32), targets.to(device)
+    optimizer.zero_grad()
+    pbar = tqdm(enumerate(dataloader), desc="Epoch", leave=False, total=len(dataloader))
 
-        optimizer.zero_grad()
+    for batch_idx, (events, targets) in pbar:
+        events, targets = events.to(device, dtype=torch.float32), targets.to(device)
 
         if scaler is not None:
             with torch.autocast(device_type=device.type):
                 outputs = model(events)
                 loss = criterion(outputs, targets)
+                scaled_loss = loss / accumulation_steps
 
-            scaler.scale(loss).backward()
-            scaler.unscale_(optimizer)
-            torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
-            scaler.step(optimizer)
-            scaler.update()
+            scaler.scale(scaled_loss).backward()
+
+            if (batch_idx + 1) % accumulation_steps == 0 or (batch_idx + 1) == len(
+                dataloader
+            ):
+                scaler.unscale_(optimizer)
+                torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
+                scaler.step(optimizer)
+                scaler.update()
+                optimizer.zero_grad()
         else:
             outputs = model(events)
             loss = criterion(outputs, targets)
-            loss.backward()
-            torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
-            optimizer.step()
+            scaled_loss = loss / accumulation_steps
+
+            scaled_loss.backward()
+
+            if (batch_idx + 1) % accumulation_steps == 0 or (batch_idx + 1) == len(
+                dataloader
+            ):
+                torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
+                optimizer.step()
+                optimizer.zero_grad()
 
         model.reset_states()
 
