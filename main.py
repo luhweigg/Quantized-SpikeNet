@@ -40,13 +40,14 @@ def parse_args():
 def main():
     args = parse_args()
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    print(
-        f"Device: {device} | Dataset: {args.dataset} | Epochs: {args.epochs} | Batch Size: {args.batch_size} | LR: {args.lr} | Time: {args.Time}"
-    )
 
     config_path = os.path.join("configs", f"{args.dataset}.json")
     with open(config_path, "r") as f:
         model_config = json.load(f)
+
+    print(
+        f"Device: {device} | Dataset: {args.dataset} | Architecture: {model_config['architecture']} | Epochs: {args.epochs} | Batch Size: {args.batch_size} | LR: {args.lr} | Time: {args.Time}"
+    )
 
     if args.use_wandb:
         wandb.init(project=args.wandb_project, config={**vars(args), **model_config})

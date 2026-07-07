@@ -50,7 +50,7 @@ class NEPICKitchens(Dataset):
         tensor_data = torch.from_numpy(data).float()
 
         if tensor_data.ndim == 3:
-            tensor_data = tensor_data.unsqueeze(0)
+            tensor_data = tensor_data.unsqueeze(1)
         elif tensor_data.ndim == 4 and tensor_data.shape[0] == 2:
             tensor_data = tensor_data.permute(1, 0, 2, 3)
 
