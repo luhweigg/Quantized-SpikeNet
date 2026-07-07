@@ -1,11 +1,12 @@
 import torch
 import torch.nn as nn
 from torch.optim.lr_scheduler import CosineAnnealingLR
-from src.models.architectures import (
-    SpikingMLP,
+from src.models import (
     CompactSpikingCNN,
+    SpikingMLP,
     SpikingVGG5,
     SpikingVGG11,
+    SpikingResNet18,
 )
 from src.data_loaders import (
     get_nmnist_loaders,
@@ -26,17 +27,20 @@ ARCHITECTURES = {
     "CompactSpikingCNN": CompactSpikingCNN,
     "SpikingVGG5": SpikingVGG5,
     "SpikingVGG11": SpikingVGG11,
+    "SpikingResNet18": SpikingResNet18,
 }
 
 
-def build_components(dataset, model_config, batch_size, time_steps, lr, epochs, device):
+def build_components(
+    dataset, arch_name, arch_params, batch_size, time_steps, lr, epochs, device
+):
     if dataset not in DATA_LOADERS:
         raise ValueError(f"Dataset {dataset} non supporté.")
 
     train_loader, test_loader = DATA_LOADERS[dataset](batch_size, time_steps)
 
-    arch_class = ARCHITECTURES[model_config["architecture"]]
-    model = arch_class(**model_config["params"]).to(device)
+    arch_class = ARCHITECTURES[arch_name]
+    model = arch_class(**arch_params).to(device)
 
     optimizer = torch.optim.AdamW(model.parameters(), lr=lr, weight_decay=1e-4)
     scheduler = CosineAnnealingLR(optimizer, T_max=epochs)

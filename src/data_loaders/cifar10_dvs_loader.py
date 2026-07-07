@@ -17,47 +17,53 @@ CIFAR10DVS_RESOURCES = [
     ("frog", "https://ndownloader.figshare.com/files/7712842"),
     ("horse", "https://ndownloader.figshare.com/files/7712845"),
     ("ship", "https://ndownloader.figshare.com/files/7712848"),
-    ("truck", "https://ndownloader.figshare.com/files/7712851")
+    ("truck", "https://ndownloader.figshare.com/files/7712851"),
 ]
+
 
 def download_and_extract_cifar10dvs(data_dir="./data/CIFAR10DVS"):
     os.makedirs(data_dir, exist_ok=True)
-    
+
     for class_name, url in CIFAR10DVS_RESOURCES:
         class_dir = os.path.join(data_dir, class_name)
         zip_path = os.path.join(data_dir, f"{class_name}.zip")
-        
-        if os.path.exists(class_dir) and len([f for f in os.listdir(class_dir) if f.endswith('.aedat')]) > 0:
+
+        if (
+            os.path.exists(class_dir)
+            and len([f for f in os.listdir(class_dir) if f.endswith(".aedat")]) > 0
+        ):
             continue
-            
+
         print(f"\n--- Traitement de la classe : {class_name} ---")
-        
+
         while not os.path.exists(zip_path) or os.path.getsize(zip_path) < 1000000:
             cmd = [
                 "wget",
                 "--show-progress",
                 "-q",
                 "--user-agent=Mozilla/5.0 (X11; Linux x86_64)",
-                "-O", zip_path,
-                url
+                "-O",
+                zip_path,
+                url,
             ]
             subprocess.run(cmd)
-            
+
             if os.path.exists(zip_path) and os.path.getsize(zip_path) > 1000000:
                 break
             else:
                 time.sleep(15)
-                
+
         print(f"Extraction de {class_name}.zip...")
-        with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+        with zipfile.ZipFile(zip_path, "r") as zip_ref:
             zip_ref.extractall(data_dir)
-        
+
         os.remove(zip_path)
         time.sleep(5)
 
+
 def get_cifar10_loaders(batch_size=64, n_time_bins=10, num_workers=4, split_seed=67):
     download_and_extract_cifar10dvs("./data/CIFAR10DVS")
-    
+
     tonic.datasets.CIFAR10DVS.download = lambda self: None
     tonic.datasets.CIFAR10DVS.md5 = None
 
@@ -73,7 +79,7 @@ def get_cifar10_loaders(batch_size=64, n_time_bins=10, num_workers=4, split_seed
     train_size = int(0.8 * len(dataset))
     test_size = len(dataset) - train_size
     generator = torch.Generator().manual_seed(split_seed)
-    
+
     train_set, test_set = random_split(
         dataset, [train_size, test_size], generator=generator
     )

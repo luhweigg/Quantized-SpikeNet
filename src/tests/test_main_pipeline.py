@@ -97,6 +97,7 @@ def test_main_resume_from_checkpoint_path(monkeypatch, tmp_path):
 
     args_first = argparse.Namespace(
         dataset="nmnist",
+        architecture=None,
         epochs=2,
         batch_size=2,
         lr=1e-3,
@@ -120,6 +121,7 @@ def test_main_resume_from_checkpoint_path(monkeypatch, tmp_path):
 
     args_resume = argparse.Namespace(
         dataset="nmnist",
+        architecture=None,
         epochs=3,
         batch_size=2,
         lr=1e-3,
@@ -141,6 +143,7 @@ def test_main_invalid_resume_path_raises(monkeypatch, tmp_path):
 
     args = argparse.Namespace(
         dataset="nmnist",
+        architecture=None,
         epochs=1,
         batch_size=2,
         lr=1e-3,
@@ -192,6 +195,7 @@ def test_main_quantized_export_contract(monkeypatch, tmp_path):
     save_root = tmp_path / "saved_models"
     args = argparse.Namespace(
         dataset="nmnist",
+        architecture=None,
         epochs=1,
         batch_size=2,
         lr=1e-3,

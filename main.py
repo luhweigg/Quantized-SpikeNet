@@ -26,6 +26,12 @@ def parse_args():
         default="nmnist",
         choices=["nmnist", "cifar10", "dvs_gesture", "nepic_kitchens"],
     )
+    parser.add_argument(
+        "--architecture",
+        type=str,
+        default="None",
+        choices=["mlp", "compact_cnn", "vgg5", "vgg11", "resnet18"],
+    )
     parser.add_argument("--epochs", type=int, default=20)
     parser.add_argument("--batch_size", type=int, default=64)
     parser.add_argument("--lr", type=float, default=1e-3)
@@ -45,12 +51,24 @@ def main():
     with open(config_path, "r") as f:
         model_config = json.load(f)
 
+    selected_arch = (
+        args.architecture if args.architecture else model_config["default_architecture"]
+    )
+    arch_params = model_config["architectures"][selected_arch]
+
     print(
-        f"Device: {device} | Dataset: {args.dataset} | Architecture: {model_config['architecture']} | Epochs: {args.epochs} | Batch Size: {args.batch_size} | LR: {args.lr} | Time: {args.Time}"
+        f"Device: {device} | Dataset: {args.dataset} | Architecture: {selected_arch} | Epochs: {args.epochs} | Batch Size: {args.batch_size} | LR: {args.lr} | Time: {args.Time}"
     )
 
     if args.use_wandb:
-        wandb.init(project=args.wandb_project, config={**vars(args), **model_config})
+        wandb.init(
+            project=args.wandb_project,
+            config={
+                **vars(args),
+                "architecture": selected_arch,
+                "arch_params": arch_params,
+            },
+        )
 
     if args.resume:
         if args.resume.endswith(".pth"):
@@ -66,7 +84,8 @@ def main():
     model, train_loader, test_loader, optimizer, scheduler, criterion, scaler = (
         build_components(
             args.dataset,
-            model_config,
+            selected_arch,
+            arch_params,
             args.batch_size,
             args.Time,
             args.lr,

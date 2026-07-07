@@ -1,8 +1,18 @@
 {
-    "architecture": "SpikingMLP",
-    "params": {
-        "input_size": 2312,
-        "hidden_size": 256,
-        "output_size": 10
+    "default_architecture": "SpikingMLP",
+    "architectures": {
+        "SpikingMLP": {
+            "input_size": 2312,
+            "hidden_size": 256,
+            "output_size": 10
+        },
+        "CompactSpikingCNN": {
+            "in_channels": 2,
+            "out_classes": 10
+        },
+        "SpikingResNet18": {
+            "in_channels": 2,
+            "out_classes": 10
+        }
     }
 }
