@@ -1,12 +1,11 @@
 import os
 import time
-import urllib.request
 import zipfile
+import subprocess
 import torch
 import tonic
 import tonic.transforms as transforms
 from torch.utils.data import random_split
-from tqdm import tqdm
 
 CIFAR10DVS_RESOURCES = [
     ("airplane", "https://ndownloader.figshare.com/files/7712788"),
@@ -21,13 +20,6 @@ CIFAR10DVS_RESOURCES = [
     ("truck", "https://ndownloader.figshare.com/files/7712851")
 ]
 
-class TqdmUpTo(tqdm):
-    """Classe utilitaire pour lier tqdm à urllib (barre de progression)"""
-    def update_to(self, b=1, bsize=1, tsize=None):
-        if tsize is not None:
-            self.total = tsize
-        self.update(b * bsize - self.n)
-
 def download_and_extract_cifar10dvs(data_dir="./data/CIFAR10DVS"):
     os.makedirs(data_dir, exist_ok=True)
     
@@ -41,24 +33,27 @@ def download_and_extract_cifar10dvs(data_dir="./data/CIFAR10DVS"):
         print(f"\n--- Traitement de la classe : {class_name} ---")
         
         while not os.path.exists(zip_path) or os.path.getsize(zip_path) < 1000000:
-            try:
-                with TqdmUpTo(unit='B', unit_scale=True, unit_divisor=1024, miniters=1, desc=f"Téléchargement {class_name}.zip") as t:
-                    urllib.request.urlretrieve(url, zip_path, reporthook=t.update_to)
-                
-                if os.path.getsize(zip_path) > 1000000:
-                    break
-                else:
-                    print(f"\nFigshare a renvoyé un fichier vide. Retentative dans 5s...")
-                    time.sleep(5)
-            except Exception as e:
-                print(f"\nErreur réseau : {e}. Retentative dans 5s...")
-                time.sleep(5)
+            cmd = [
+                "wget",
+                "--show-progress",
+                "-q",
+                "--user-agent=Mozilla/5.0 (X11; Linux x86_64)",
+                "-O", zip_path,
+                url
+            ]
+            subprocess.run(cmd)
+            
+            if os.path.exists(zip_path) and os.path.getsize(zip_path) > 1000000:
+                break
+            else:
+                time.sleep(15)
                 
         print(f"Extraction de {class_name}.zip...")
         with zipfile.ZipFile(zip_path, 'r') as zip_ref:
             zip_ref.extractall(data_dir)
         
         os.remove(zip_path)
+        time.sleep(5)
 
 def get_cifar10_loaders(batch_size=64, n_time_bins=10, num_workers=4, split_seed=67):
     download_and_extract_cifar10dvs("./data/CIFAR10DVS")
