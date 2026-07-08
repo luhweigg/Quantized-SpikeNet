@@ -29,8 +29,8 @@ def parse_args():
     parser.add_argument(
         "--architecture",
         type=str,
-        default="None",
-        choices=["mlp", "compact_cnn", "vgg5", "vgg11", "resnet18"],
+        default=None,
+        choices=["SpikingMLP", "CompactSpikingCNN", "SpikingVGG5", "SpikingVGG11", "SpikingResNet18"],
     )
     parser.add_argument("--epochs", type=int, default=20)
     parser.add_argument("--batch_size", type=int, default=64)
