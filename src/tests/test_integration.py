@@ -1,6 +1,6 @@
 import torch
 
-from src.data_loaders import cifar10_dvs_loader
+# from src.data_loaders import cifar10_dvs_loader
 from src.engine import quantize_weights
 from src.models import SpikingMLP, CompactSpikingCNN, SpikingVGG5
 
