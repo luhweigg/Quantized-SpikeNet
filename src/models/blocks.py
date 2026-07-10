@@ -26,6 +26,7 @@ class SpikingConvBlock(nn.Sequential):
         in_channels: int,
         out_channels: int,
         kernel_size: int = 3,
+        stride: int = 1,
         padding: int = 1,
         use_batch_norm: bool = False,
         use_max_pool: bool = True,
@@ -38,6 +39,7 @@ class SpikingConvBlock(nn.Sequential):
                 in_channels,
                 out_channels,
                 kernel_size=kernel_size,
+                stride=stride,
                 padding=padding,
                 bias=not use_batch_norm,
             )

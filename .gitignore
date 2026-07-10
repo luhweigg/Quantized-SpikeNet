@@ -177,5 +177,7 @@ pyrightconfig.json
 data
 saved_models
 wandb
+gif
+reports
 
 # End of https://www.toptal.com/developers/gitignore/api/python

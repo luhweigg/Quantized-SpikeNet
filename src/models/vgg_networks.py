@@ -38,6 +38,7 @@ class SpikingVGG11(BaseSNNModel):
             SpikingConvBlock(
                 in_channels,
                 64,
+                stride=2,
                 use_batch_norm=True,
                 v_threshold=v_th,
                 surrogate_func=sg,
