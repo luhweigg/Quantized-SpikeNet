@@ -42,9 +42,9 @@ def build_components(
     arch_class = ARCHITECTURES[arch_name]
     model = arch_class(**arch_params).to(device)
 
-    optimizer = torch.optim.AdamW(model.parameters(), lr=lr, weight_decay=1e-4)
+    optimizer = torch.optim.AdamW(model.parameters(), lr=lr, weight_decay=1e-3)
     scheduler = CosineAnnealingLR(optimizer, T_max=epochs)
-    criterion = nn.CrossEntropyLoss(label_smoothing=0.1)
+    criterion = nn.CrossEntropyLoss()
     scaler = None
 
     return model, train_loader, test_loader, optimizer, scheduler, criterion, scaler

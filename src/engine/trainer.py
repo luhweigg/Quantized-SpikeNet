@@ -4,7 +4,7 @@ from spikingjelly.activation_based.base import MemoryModule
 
 
 def train_one_epoch(
-    model, dataloader, optimizer, criterion, device, scaler=None, accumulation_steps=4
+    model, dataloader, optimizer, criterion, device, scaler=None, accumulation_steps=1
 ):
     """
     Train the model for one epoch.
