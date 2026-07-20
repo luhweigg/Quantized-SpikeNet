@@ -8,6 +8,7 @@ from .utils import (
     restore_rng_state,
     save_checkpoint,
     load_checkpoint,
+    count_neurons,
 )
 
 __all__ = [
@@ -21,4 +22,5 @@ __all__ = [
     "restore_rng_state",
     "save_checkpoint",
     "load_checkpoint",
+    "count_neurons",
 ]

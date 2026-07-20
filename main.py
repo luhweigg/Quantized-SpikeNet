@@ -15,6 +15,7 @@ from src.engine import (
     capture_rng_state,
     CSVLogger,
     EarlyStopping,
+    count_neurons
 )
 
 
@@ -99,6 +100,9 @@ def main():
             device,
         )
     )
+
+    sample_events, _ = next(iter(train_loader))
+    count_neurons(model, sample_events.shape, device)
 
     if args.resume:
         resume_path = (
