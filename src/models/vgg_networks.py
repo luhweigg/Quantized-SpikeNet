@@ -11,7 +11,7 @@ class SpikingVGG5(BaseSNNModel):
     def __init__(self, in_channels: int, out_classes: int, dropout: float = 0.3):
         super().__init__()
         self.network = nn.Sequential(
-            SpikingConvBlock(in_channels, 64),
+            SpikingConvBlock(in_channels, 64, stride=2),
             SpikingConvBlock(64, 128),
             SpikingConvBlock(128, 256),
             SpikingConvBlock(256, 256),
