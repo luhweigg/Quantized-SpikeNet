@@ -15,7 +15,7 @@ from src.engine import (
     capture_rng_state,
     CSVLogger,
     EarlyStopping,
-    count_neurons
+    count_neurons,
 )
 
 

@@ -125,6 +125,7 @@ def load_checkpoint(resume_path, model, optimizer, scheduler, scaler, device):
 
     return start_epoch, best_acc
 
+
 def count_neurons(model, input_size, device):
     """
     Calcule le nombre total de neurones SNN instanciés dans le modèle.
@@ -148,5 +149,7 @@ def count_neurons(model, input_size, device):
         h.remove()
 
     model.reset_states()
-    print(f"Architecture : {model.__class__.__name__} | Nombre total de neurones : {total_neurons[0]}")
+    print(
+        f"Architecture : {model.__class__.__name__} | Nombre total de neurones : {total_neurons[0]}"
+    )
     return total_neurons[0]
