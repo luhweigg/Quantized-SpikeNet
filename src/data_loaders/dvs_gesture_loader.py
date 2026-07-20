@@ -27,7 +27,7 @@ def get_dvs_gesture_loaders(batch_size=64, n_time_bins=10, num_workers=4):
 
     train_transform = transforms.Compose(
         [
-            transforms.DropEvent(p=0.1),
+            transforms.DropEvent(p=0.2),
             transforms.ToFrame(sensor_size=sensor_size, n_time_bins=n_time_bins),
         ]
     )
