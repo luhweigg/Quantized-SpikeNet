@@ -10,15 +10,17 @@ def custom_collate_fn(batch):
     return events, targets
 
 
-def get_cifar10_loaders(batch_size: int, time_steps: int, num_workers: int = 4, split_seed: int = 42):
+def get_cifar10_loaders(
+    batch_size: int, time_steps: int, num_workers: int = 4, split_seed: int = 42
+):
     tonic.datasets.CIFAR10DVS.url = "https://ndownloader.figshare.com/files/38023437"
 
-    sensor_size = tonic.datasets.CIFAR10DVS.sensor_size
+    sensor_size = (32, 32, 2)
     full_dataset = tonic.datasets.CIFAR10DVS(save_to="./data")
-    
+
     train_size = int(0.9 * len(full_dataset))
     test_size = len(full_dataset) - train_size
-    
+
     generator = torch.Generator().manual_seed(split_seed)
     train_subset, test_subset = random_split(
         full_dataset, [train_size, test_size], generator=generator
@@ -27,13 +29,15 @@ def get_cifar10_loaders(batch_size: int, time_steps: int, num_workers: int = 4, 
     train_transform = transforms.Compose(
         [
             transforms.DropEvent(p=0.2),
+            transforms.Downsample(spatial_factor=0.25),
             transforms.ToFrame(sensor_size=sensor_size, n_time_bins=time_steps),
         ]
     )
 
     test_transform = transforms.Compose(
         [
-            transforms.ToFrame(sensor_size=sensor_size, n_time_bins=time_steps)
+            transforms.Downsample(spatial_factor=0.25),
+            transforms.ToFrame(sensor_size=sensor_size, n_time_bins=time_steps),
         ]
     )
 
