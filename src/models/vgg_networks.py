@@ -7,6 +7,7 @@ class SpikingVGG3(BaseSNNModel):
     """
     VGG-type SNN architecture with 3 convolutional blocks.
     """
+
     def __init__(
         self,
         in_channels: int,
@@ -32,6 +33,7 @@ class SpikingVGG3(BaseSNNModel):
             layer.Linear(256, out_classes, bias=True),
         )
         functional.set_step_mode(self, step_mode="m")
+
 
 class SpikingVGG5(BaseSNNModel):
     """
