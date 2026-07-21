@@ -34,6 +34,7 @@ def parse_args():
         choices=[
             "SpikingMLP",
             "CompactSpikingCNN",
+            "SpikingVGG3",
             "SpikingVGG5",
             "SpikingVGG11",
             "SpikingResNet18",
