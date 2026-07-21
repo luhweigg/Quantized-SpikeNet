@@ -4,6 +4,7 @@ from torch.optim.lr_scheduler import CosineAnnealingLR
 from src.models import (
     CompactSpikingCNN,
     SpikingMLP,
+    SpikingVGG3,
     SpikingVGG5,
     SpikingVGG11,
     SpikingResNet18,
@@ -25,6 +26,7 @@ DATA_LOADERS = {
 ARCHITECTURES = {
     "SpikingMLP": SpikingMLP,
     "CompactSpikingCNN": CompactSpikingCNN,
+    "SpikingVGG3": SpikingVGG3,
     "SpikingVGG5": SpikingVGG5,
     "SpikingVGG11": SpikingVGG11,
     "SpikingResNet18": SpikingResNet18,

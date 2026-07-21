@@ -10,6 +10,10 @@
             "in_channels": 3,
             "out_classes": 8
         },
+        "SpikingVGG3": {
+            "in_channels": 3,
+            "out_classes": 8
+        },
         "SpikingVGG5": {
             "in_channels": 3,
             "out_classes": 8

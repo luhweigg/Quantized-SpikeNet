@@ -10,6 +10,12 @@
             "in_channels": 2,
             "out_classes": 10
         },
+        "SpikingVGG3": {
+            "in_channels": 2,
+            "out_classes": 10,
+            "dropout": 0.5,
+            "init_stride": 1
+        },
         "SpikingVGG5": {
             "in_channels": 2,
             "out_classes": 10,
