@@ -7,6 +7,27 @@ resolution-markers = [
 ]
 
 [[package]]
+name = "aedat"
+version = "2.2.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "numpy" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/6d/d0/1fc188807639d3942ee7e5627eb6945ee39df6c51961422622119d133247/aedat-2.2.0.tar.gz", hash = "sha256:a2e2d36745863c85ef6723f6a7ab90ed972808f07f3dd7cd7f66d9d54cb527a0", size = 5123688, upload-time = "2025-01-24T02:04:47.471Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/83/31/4a3deb0fa21b7a6bf659d98aaa60be201be8903555ecc8789c35854f3bcf/aedat-2.2.0-cp312-cp312-macosx_13_0_x86_64.whl", hash = "sha256:80972c7567c24e5631912f13b6e5da7588b127d593830a090f5ef10b28147f1a", size = 457794, upload-time = "2025-01-24T02:04:25.592Z" },
+    { url = "https://files.pythonhosted.org/packages/6b/5e/e11cf88621d313b253eb18a6ddb8ed2cf47d5d766e806b62eee2e41143a0/aedat-2.2.0-cp312-cp312-macosx_14_0_arm64.whl", hash = "sha256:f40695e88fee3a40636d20dbfed9f3d34e662c73f08b078b3e5224caa3947827", size = 395037, upload-time = "2025-01-24T02:04:27.356Z" },
+    { url = "https://files.pythonhosted.org/packages/e5/36/66538afa76961e3cc1dc8fe4ae1a83a3c4a0a9111dd6d426001c42f4f924/aedat-2.2.0-cp312-cp312-manylinux_2_28_x86_64.whl", hash = "sha256:1e9aa64294a4e07432acf3498d6933df75f6911d45d8745d1b4f3c57fb7675ca", size = 496235, upload-time = "2025-01-24T02:04:28.991Z" },
+    { url = "https://files.pythonhosted.org/packages/5c/3f/fb1b00fa6f1b8c10b1095df2737510c661626c57920073d06fdc678867cd/aedat-2.2.0-cp312-cp312-musllinux_1_2_x86_64.whl", hash = "sha256:22cc7159373f1df9d3a3f178a9698658d44b1675a4d433a06979f37822f572af", size = 559897, upload-time = "2025-01-24T02:04:30.721Z" },
+    { url = "https://files.pythonhosted.org/packages/05/62/8f6cc28e7405b9cc7bd1a5489f75792d4213bd9e1f9fdfc492ad2ee0b2d9/aedat-2.2.0-cp312-none-win_amd64.whl", hash = "sha256:ce2f252b2810978dc0c2750f4d016020f6cef2a5f4a459057dabc0e5ce5863d6", size = 271028, upload-time = "2025-01-24T02:04:31.958Z" },
+    { url = "https://files.pythonhosted.org/packages/14/12/0310b9dc3ceaaadd1f99c1c5b0e20b38cf19e28e52d9f1b6aa6999c74073/aedat-2.2.0-cp313-cp313-macosx_13_0_x86_64.whl", hash = "sha256:d7907f82b6524d70b0e6497ea5c31350f64214e684a0a8b0c864f5c62f8bef23", size = 457795, upload-time = "2025-01-24T02:04:33.087Z" },
+    { url = "https://files.pythonhosted.org/packages/58/fb/2b83d7bc3187495280905d700d3043e846e5369b97501e91e38a0b7abaaa/aedat-2.2.0-cp313-cp313-macosx_14_0_arm64.whl", hash = "sha256:fcae9b7a346abf8a673d24c7d32d48c26ce89f0127f1ab4e9cde47af4577b84d", size = 395040, upload-time = "2025-01-24T02:04:34.878Z" },
+    { url = "https://files.pythonhosted.org/packages/8f/70/6f95cbaf3f63c041c1384aca72d4a8f5927c63fe98d3249b02e419395ec5/aedat-2.2.0-cp313-cp313-manylinux_2_28_x86_64.whl", hash = "sha256:a1e9f203d361610388d22ef8a1dc95a68606779a9873ea439e6c194426a47a99", size = 496236, upload-time = "2025-01-24T02:04:36.699Z" },
+    { url = "https://files.pythonhosted.org/packages/ac/b6/6de7efded6ee397fc31e884928e19df5f97c7c537f247e63bff8b7c45d78/aedat-2.2.0-cp313-cp313-musllinux_1_2_x86_64.whl", hash = "sha256:ec276f8ab67e6da92e27b423ffbbf21c7eff1e02a271f0a47fcf58eff667a7ca", size = 559897, upload-time = "2025-01-24T02:04:38.538Z" },
+    { url = "https://files.pythonhosted.org/packages/bf/96/03bcb636036e09834911ec44c570d618ea6adde7a0e2222af809e25781f2/aedat-2.2.0-cp313-none-win_amd64.whl", hash = "sha256:56aa339f7376a220ca74e64a74dbd4e569e498b9429c989e86111ac492e2a4e0", size = 271032, upload-time = "2025-01-24T02:04:39.646Z" },
+]
+
+[[package]]
 name = "annotated-types"
 version = "0.7.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1336,6 +1357,7 @@ name = "quantized-spikenet"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
+    { name = "aedat" },
     { name = "pandas" },
     { name = "pynn" },
     { name = "pytest" },
@@ -1352,6 +1374,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
+    { name = "aedat", specifier = ">=2.2.0" },
     { name = "pandas", specifier = "<3.0.0" },
     { name = "pynn", specifier = ">=0.13.0" },
     { name = "pytest", specifier = ">=9.1.1" },

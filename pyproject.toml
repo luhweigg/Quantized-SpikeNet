@@ -5,6 +5,7 @@ description = "A modular Spiking Neural Network (SNN) training pipeline built wi
 readme = "README.md"
 requires-python = ">=3.12, <3.14"
 dependencies = [
+    "aedat>=2.2.0",
     "pandas<3.0.0",
     "pynn>=0.13.0",
     "pytest>=9.1.1",
