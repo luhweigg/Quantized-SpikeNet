@@ -42,7 +42,7 @@ def build_components(
     arch_class = ARCHITECTURES[arch_name]
     model = arch_class(**arch_params).to(device)
 
-    optimizer = torch.optim.AdamW(model.parameters(), lr=lr, weight_decay=1e-3)
+    optimizer = torch.optim.AdamW(model.parameters(), lr=lr, weight_decay=1e-2)
     scheduler = CosineAnnealingLR(optimizer, T_max=epochs * 2)
     criterion = nn.CrossEntropyLoss()
     scaler = None

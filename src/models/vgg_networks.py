@@ -10,12 +10,15 @@ class SpikingVGG5(BaseSNNModel):
 
     def __init__(self, in_channels: int, out_classes: int, dropout: float = 0.5):
         super().__init__()
+        sg = surrogate.ATan(alpha=1.5)
         self.network = nn.Sequential(
-            SpikingConvBlock(in_channels, 64, stride=2),
-            SpikingConvBlock(64, 128),
-            SpikingConvBlock(128, 256),
-            SpikingConvBlock(256, 256),
-            SpikingConvBlock(256, 512),
+            SpikingConvBlock(
+                in_channels, 64, stride=2, use_batch_norm=False, surrogate_func=sg
+            ),
+            SpikingConvBlock(64, 128, use_batch_norm=True, surrogate_func=sg),
+            SpikingConvBlock(128, 256, use_batch_norm=True, surrogate_func=sg),
+            SpikingConvBlock(256, 256, use_batch_norm=True, surrogate_func=sg),
+            SpikingConvBlock(256, 512, use_batch_norm=True, surrogate_func=sg),
             layer.AdaptiveAvgPool2d((1, 1)),
             layer.Flatten(),
             layer.Dropout(dropout),
