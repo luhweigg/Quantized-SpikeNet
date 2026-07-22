@@ -29,7 +29,7 @@ def get_cifar10_loaders(
         [
             transforms.Downsample(spatial_factor=0.25),
             transforms.RandomFlipPolarity(),
-            transforms.RandomCrop(sensor_size=(32, 32), size=(28, 28)),
+            transforms.RandomCrop(sensor_size=(32, 32), target_size=(28, 28)),
             transforms.DropEvent(p=0.1),
             transforms.ToFrame(sensor_size=(28, 28, 2), n_time_bins=time_steps),
         ]
