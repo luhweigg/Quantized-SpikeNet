@@ -15,7 +15,6 @@ def get_cifar10_loaders(
 ):
     tonic.datasets.CIFAR10DVS.url = "https://ndownloader.figshare.com/files/38023437"
 
-    sensor_size = (32, 32, 2)
     full_dataset = tonic.datasets.CIFAR10DVS(save_to="./data")
 
     train_size = int(0.9 * len(full_dataset))
@@ -28,28 +27,31 @@ def get_cifar10_loaders(
 
     train_transform = transforms.Compose(
         [
-            transforms.DropEvent(p=0.2),
             transforms.Downsample(spatial_factor=0.25),
-            transforms.ToFrame(sensor_size=sensor_size, n_time_bins=time_steps),
+            transforms.RandomFlipPolarity(),
+            transforms.RandomCrop(sensor_size=(32, 32), target_size=(28, 28)),
+            transforms.DropEvent(p=0.1),
+            transforms.ToFrame(sensor_size=(28, 28, 2), n_time_bins=time_steps),
         ]
     )
 
     test_transform = transforms.Compose(
         [
             transforms.Downsample(spatial_factor=0.25),
-            transforms.ToFrame(sensor_size=sensor_size, n_time_bins=time_steps),
+            transforms.CenterCrop(sensor_size=(32, 32), target_size=(28, 28)),
+            transforms.ToFrame(sensor_size=(28, 28, 2), n_time_bins=time_steps),
         ]
     )
 
     cached_train = tonic.DiskCachedDataset(
         train_subset,
-        cache_path="./data/cache/cifar10_dvs/train",
+        cache_path="./data/cache/cifar10_dvs/train_aug",
         transform=train_transform,
     )
 
     cached_test = tonic.DiskCachedDataset(
         test_subset,
-        cache_path="./data/cache/cifar10_dvs/test",
+        cache_path="./data/cache/cifar10_dvs/test_aug",
         transform=test_transform,
     )
 
