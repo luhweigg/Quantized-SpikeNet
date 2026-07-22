@@ -13,9 +13,9 @@ from src.engine import (
     save_checkpoint,
     load_checkpoint,
     capture_rng_state,
+    count_neurons,
     CSVLogger,
     EarlyStopping,
-    count_neurons,
 )
 
 
@@ -35,6 +35,7 @@ def parse_args():
             "SpikingMLP",
             "CompactSpikingCNN",
             "SpikingVGG3",
+            "SpikingVGG4",
             "SpikingVGG5",
             "SpikingVGG11",
             "SpikingResNet18",

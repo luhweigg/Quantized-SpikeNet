@@ -16,6 +16,12 @@
             "dropout": 0.5,
             "init_stride": 1
         },
+        "SpikingVGG4": {
+            "in_channels": 2,
+            "out_classes": 11,
+            "dropout": 0.5,
+            "init_stride": 1
+        },
         "SpikingVGG5": {
             "in_channels": 2,
             "out_classes": 11,
