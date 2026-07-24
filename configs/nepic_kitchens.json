@@ -24,7 +24,8 @@
         },
         "SpikingVGG11": {
             "in_channels": 1,
-            "out_classes": 8
+            "out_classes": 8,
+            "stride": 4
         },
         "SpikingResNet18": {
             "in_channels": 1,
