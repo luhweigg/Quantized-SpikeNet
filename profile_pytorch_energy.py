@@ -1,6 +1,8 @@
 import torch
 import time
 import os
+import threading
+import subprocess
 from datetime import datetime
 from spikingjelly.activation_based.base import MemoryModule
 from src.models import SpikingMLP, SpikingVGG4, SpikingVGG5
@@ -8,8 +10,8 @@ from src.models import SpikingMLP, SpikingVGG4, SpikingVGG5
 DATASET = "dvs_gesture"  # Choices : "nmnist", "cifar10", "dvs_gesture"
 SIMULATION_TIME_MS = 20
 NOISE_RATE_HZ = 50.0
-
 ENERGY_PER_SPIKE_JOULES = 0.9e-12
+ASSUMED_POWER_WATTS = 250.0 if torch.cuda.is_available() else 80.0
 
 WEIGHTS_PATHS = {
     "nmnist": "networks/nmnist_best.pth",
@@ -19,6 +21,10 @@ WEIGHTS_PATHS = {
 
 
 def generate_poisson_noise(shape, rate_hz, time_ms, device):
+    """
+    Generate a tensor of random spikes mimicking the SpikeSourcePoisson of SpiNNaker.
+    rate_hz: e.g., 50Hz = 50 spikes / 1000 ms = probability of 0.05 per ms.
+    """
     prob_per_ms = rate_hz / 1000.0
     noise_shape = (time_ms, 1, *shape)
 
@@ -27,7 +33,55 @@ def generate_poisson_noise(shape, rate_hz, time_ms, device):
     return noise_tensor
 
 
+class GPUPowerMonitor:
+    """
+    Background thread to measure real GPU power draw using nvidia-smi.
+    """
+
+    def __init__(self):
+        self.measurements = []
+        self.is_running = False
+        self.thread = None
+
+    def _monitor_loop(self):
+        while self.is_running:
+            try:
+                result = subprocess.run(
+                    [
+                        "nvidia-smi",
+                        "--query-gpu=power.draw",
+                        "--format=csv,noheader,nounits",
+                    ],
+                    capture_output=True,
+                    text=True,
+                    check=True,
+                )
+                power_val = float(result.stdout.strip().split("\n")[0])
+                self.measurements.append(power_val)
+            except Exception:
+                pass
+            time.sleep(0.2)
+
+    def start(self):
+        self.is_running = True
+        self.thread = threading.Thread(target=self._monitor_loop)
+        self.thread.start()
+
+    def stop(self):
+        self.is_running = False
+        if self.thread is not None:
+            self.thread.join()
+
+        if self.measurements:
+            return sum(self.measurements) / len(self.measurements)
+        return None
+
+
 class EnergyProfiler:
+    """
+    Attach hooks to the network to count each spike.
+    """
+
     def __init__(self, model):
         self.model = model
         self.hooks = []
@@ -88,14 +142,19 @@ def run_pytorch_profiling():
     )
 
     profiler = EnergyProfiler(model)
+    gpu_monitor = GPUPowerMonitor()
+
     print(f"[*] Beginning of the simulation ({SIMULATION_TIME_MS} ms)...")
 
+    gpu_monitor.start()
     start_time = time.perf_counter()
 
     with torch.no_grad():
         _ = model(noise_events)
 
     end_time = time.perf_counter()
+    avg_measured_power = gpu_monitor.stop()
+
     real_execution_time = end_time - start_time
 
     model.reset_states()
@@ -104,6 +163,15 @@ def run_pytorch_profiling():
     total_spikes = profiler.total_spikes
     energy_joules = total_spikes * ENERGY_PER_SPIKE_JOULES
     theoretical_power_watts = energy_joules / (SIMULATION_TIME_MS / 1000.0)
+
+    if avg_measured_power is not None:
+        used_power_watts = avg_measured_power
+        power_source = "Live Measured (nvidia-smi)"
+    else:
+        used_power_watts = ASSUMED_POWER_WATTS
+        power_source = "Assumed (Fallback)"
+
+    real_hardware_energy = used_power_watts * real_execution_time
 
     report_text = f"""
 ==================================================
@@ -122,6 +190,11 @@ def run_pytorch_profiling():
 --------------------------------------------------
  [B] HARDWARE OVERHEAD ({device.type.upper()})
  Real Execution Time     : {real_execution_time:.4f} seconds
+--------------------------------------------------
+ [C] REAL HARDWARE ENERGY (Physical Estimation)
+ Power Source            : {power_source}
+ Average Power Draw      : {used_power_watts:.2f} W
+ Real Energy Consumed    : {real_hardware_energy:.2f} Joules
 =================================================="""
 
     print(report_text)
@@ -137,11 +210,11 @@ def run_pytorch_profiling():
 
     history_file_path = os.path.join("reports", DATASET, "history.log")
     with open(history_file_path, "a", encoding="utf-8") as f:
-        log_line = f"[{timestamp}] {model.__class__.__name__} | Spikes: {int(total_spikes):,} | Energy: {energy_joules:.6e} J | Theoretical Power: {theoretical_power_watts * 1000:.4f} mW\n"
+        log_line = f"[{timestamp}] {model.__class__.__name__} | Spikes: {int(total_spikes):,} | Real GPU Energy: {real_hardware_energy:.2f} J\n"
         f.write(log_line)
 
     print(f"\n Detailed report saved in: {report_file_path}")
-    print(f" History updated at : {history_file_path}")
+    print(f" History updated at      : {history_file_path}")
 
 
 if __name__ == "__main__":
