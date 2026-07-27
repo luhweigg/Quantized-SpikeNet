@@ -11,12 +11,14 @@ NOISE_RATE_HZ = 50.0
 
 ENERGY_PER_SPIKE_JOULES = 0.9e-12
 
+WEIGHTS_PATHS = {
+    "nmnist": "networks/nmnist_best.pth",
+    "cifar10": "networks/cifar10_best.pth",
+    "dvs_gesture": "networks/dvs-gesture_best.pth",
+}
+
 
 def generate_poisson_noise(shape, rate_hz, time_ms, device):
-    """
-    Generate a tensor of random spikes mimicking the SpikeSourcePoisson of SpiNNaker.
-    rate_hz: e.g., 50Hz = 50 spikes / 1000 ms = probability of 0.05 per ms.
-    """
     prob_per_ms = rate_hz / 1000.0
     noise_shape = (time_ms, 1, *shape)
 
@@ -26,10 +28,6 @@ def generate_poisson_noise(shape, rate_hz, time_ms, device):
 
 
 class EnergyProfiler:
-    """
-    Attach hooks to the network to count each spike.
-    """
-
     def __init__(self, model):
         self.model = model
         self.hooks = []
@@ -66,6 +64,22 @@ def run_pytorch_profiling():
         input_shape = (2, 128, 128)
     else:
         raise ValueError("Dataset inconnu.")
+
+    pth_path = WEIGHTS_PATHS.get(DATASET, "")
+    if os.path.exists(pth_path):
+        print(f"[*] Loading trained weights from {pth_path}...")
+        state_dict = torch.load(pth_path, map_location=device, weights_only=True)
+        if "state_dict" in state_dict:
+            state_dict = state_dict["state_dict"]
+        state_dict = {k.replace("module.", ""): v for k, v in state_dict.items()}
+        model.load_state_dict(state_dict, strict=False)
+    else:
+        print(
+            "[!] WARNING: No weights found at paths. Forcing high random weights to avoid a dead network!"
+        )
+        for m in model.modules():
+            if isinstance(m, (torch.nn.Conv2d, torch.nn.Linear)):
+                torch.nn.init.uniform_(m.weight, 0.5, 1.0)
 
     model.eval()
 
@@ -126,8 +140,8 @@ def run_pytorch_profiling():
         log_line = f"[{timestamp}] {model.__class__.__name__} | Spikes: {int(total_spikes):,} | Energy: {energy_joules:.6e} J | Theoretical Power: {theoretical_power_watts * 1000:.4f} mW\n"
         f.write(log_line)
 
-    print(f"\n Detailed report save in: {report_file_path}")
-    print(f"History updated at : {history_file_path}")
+    print(f"\n Detailed report saved in: {report_file_path}")
+    print(f" History updated at : {history_file_path}")
 
 
 if __name__ == "__main__":
