@@ -5,9 +5,11 @@ import threading
 import subprocess
 from datetime import datetime
 from spikingjelly.activation_based.base import MemoryModule
-from src.models import SpikingMLP, SpikingVGG4, SpikingVGG5
+from src.models import SpikingMLP, SpikingVGG4, SpikingVGG5, SpikingVGG11
 
-DATASET = "dvs_gesture"  # Choices : "nmnist", "cifar10", "dvs_gesture"
+DATASET = (
+    "nepic_kitchens"  # Choices : "nmnist", "cifar10", "dvs_gesture", "nepic_kitchens"
+)
 SIMULATION_TIME_MS = 20
 NOISE_RATE_HZ = 50.0
 ENERGY_PER_SPIKE_JOULES = 0.9e-12
@@ -17,6 +19,7 @@ WEIGHTS_PATHS = {
     "nmnist": "networks/nmnist_best.pth",
     "cifar10": "networks/cifar10_best.pth",
     "dvs_gesture": "networks/dvs-gesture_best.pth",
+    "nepic_kitchens": "networks/nepic_kitchens_best.pth",
 }
 
 
@@ -116,6 +119,9 @@ def run_pytorch_profiling():
     elif DATASET == "dvs_gesture":
         model = SpikingVGG5(in_channels=2, out_classes=11, init_stride=2).to(device)
         input_shape = (2, 128, 128)
+    elif DATASET == "nepic_kitchens":
+        model = SpikingVGG11(in_channels=1, out_classes=8, init_stride=4).to(device)
+        input_shape = (1, 304, 384)
     else:
         raise ValueError("Dataset inconnu.")
 
@@ -129,7 +135,7 @@ def run_pytorch_profiling():
         model.load_state_dict(state_dict, strict=False)
     else:
         print(
-            "[!] WARNING: No weights found at paths. Forcing high random weights to avoid a dead network!"
+            "[!] WARNING: No weights found. Forcing high random weights to avoid a dead network!"
         )
         for m in model.modules():
             if isinstance(m, (torch.nn.Conv2d, torch.nn.Linear)):
