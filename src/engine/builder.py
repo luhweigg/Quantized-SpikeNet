@@ -7,7 +7,7 @@ from src.models import (
     SpikingVGG3,
     SpikingVGG4,
     SpikingVGG5,
-    SpikingVGG11,
+    SpikingVGG8,
     SpikingResNet18,
 )
 from src.data_loaders import (
@@ -30,7 +30,7 @@ ARCHITECTURES = {
     "SpikingVGG3": SpikingVGG3,
     "SpikingVGG4": SpikingVGG4,
     "SpikingVGG5": SpikingVGG5,
-    "SpikingVGG11": SpikingVGG11,
+    "SpikingVGG8": SpikingVGG8,
     "SpikingResNet18": SpikingResNet18,
 }
 

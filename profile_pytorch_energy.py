@@ -5,7 +5,7 @@ import threading
 import subprocess
 from datetime import datetime
 from spikingjelly.activation_based.base import MemoryModule
-from src.models import SpikingMLP, SpikingVGG4, SpikingVGG5, SpikingVGG11
+from src.models import SpikingMLP, SpikingVGG4, SpikingVGG5, SpikingVGG8
 
 DATASET = (
     "nepic_kitchens"  # Choices : "nmnist", "cifar10", "dvs_gesture", "nepic_kitchens"
@@ -120,7 +120,7 @@ def run_pytorch_profiling():
         model = SpikingVGG5(in_channels=2, out_classes=11, init_stride=2).to(device)
         input_shape = (2, 128, 128)
     elif DATASET == "nepic_kitchens":
-        model = SpikingVGG11(in_channels=1, out_classes=8, init_stride=4).to(device)
+        model = SpikingVGG8(in_channels=1, out_classes=8, init_stride=4).to(device)
         input_shape = (1, 304, 384)
     else:
         raise ValueError("Dataset inconnu.")

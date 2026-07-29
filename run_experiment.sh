@@ -44,6 +44,6 @@ done
 
 for t in 2 4 8; do
 for vth in "${THRESHOLDS[@]}"; do
-run_experiment "nepic_kitchens" "SpikingVGG11" $t 4$vth
+run_experiment "nepic_kitchens" "SpikingVGG8" $t 4$vth
 done
 done

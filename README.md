@@ -27,7 +27,7 @@ The framework provides specific architectures tuned for event-based vision tasks
 | **N-MNIST** | `SpikingMLP` | Neuromorphic Digit Recognition | 10 |
 | **CIFAR10-DVS** | `CompactSpikingCNN` / `SpikingVGG4` | Complex Object Classification | 10 |
 | **DVS Gesture** | `SpikingVGG5` | Dynamic Hand Gesture Recognition | 11 |
-| **N-EPIC Kitchens** | `SpikingVGG11` / `SpikingResNet18` | Ego-centric Action Recognition | Multi |
+| **N-EPIC Kitchens** | `SpikingVGG8` / `SpikingResNet18` | Ego-centric Action Recognition | Multi |
 
 *Other available architectures: `SpikingVGG3`.*
 
@@ -75,7 +75,7 @@ uv run python main.py --dataset dvs_gesture --resume saved_models/dvs_gesture/ru
 | Argument | Type | Default | Description |
 | --- | --- | --- | --- |
 | `--dataset` | `str` | `nmnist` | Target dataset (`nmnist`, `cifar10`, `dvs_gesture`, `nepic_kitchens`) |
-| `--architecture` | `str` | `None` | Specific model to use (e.g., `SpikingVGG11`, `SpikingResNet18`) |
+| `--architecture` | `str` | `None` | Specific model to use (e.g., `SpikingVGG8`, `SpikingResNet18`) |
 | `--epochs` | `int` | `20` | Maximum number of training epochs |
 | `--batch_size` | `int` | `64` | Number of samples per batch |
 | `--lr` | `float` | `1e-3` | Initial learning rate |

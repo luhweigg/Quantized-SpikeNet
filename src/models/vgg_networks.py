@@ -150,9 +150,9 @@ class SpikingVGG5(BaseSNNModel):
         functional.set_step_mode(self, step_mode="m")
 
 
-class SpikingVGG11(BaseSNNModel):
+class SpikingVGG8(BaseSNNModel):
     """
-    Deeper VGG-11 SNN architecture adapted for complex backgrounds and high ego-motion (N-EPIC Kitchens).
+    Deeper VGG-8 SNN architecture adapted for complex backgrounds and high ego-motion (N-EPIC Kitchens).
     """
 
     def __init__(

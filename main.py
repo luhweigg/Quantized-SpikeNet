@@ -37,7 +37,7 @@ def parse_args():
             "SpikingVGG3",
             "SpikingVGG4",
             "SpikingVGG5",
-            "SpikingVGG11",
+            "SpikingVGG8",
             "SpikingResNet18",
         ],
     )

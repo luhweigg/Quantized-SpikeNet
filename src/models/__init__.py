@@ -1,5 +1,5 @@
 from .simple_networks import SpikingMLP, CompactSpikingCNN
-from .vgg_networks import SpikingVGG3, SpikingVGG4, SpikingVGG5, SpikingVGG11
+from .vgg_networks import SpikingVGG3, SpikingVGG4, SpikingVGG5, SpikingVGG8
 from .resnet_networks import SpikingResNet18
 
 __all__ = [
@@ -8,6 +8,6 @@ __all__ = [
     "SpikingVGG3",
     "SpikingVGG4",
     "SpikingVGG5",
-    "SpikingVGG11",
+    "SpikingVGG8",
     "SpikingResNet18",
 ]

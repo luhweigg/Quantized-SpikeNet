@@ -179,5 +179,6 @@ saved_models
 wandb
 gif
 reports
+networks
 
 # End of https://www.toptal.com/developers/gitignore/api/python
