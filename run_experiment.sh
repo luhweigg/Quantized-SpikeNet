@@ -26,24 +26,30 @@ sleep 5
 
 for t in 2 4 8 16 32; do
 for vth in "${THRESHOLDS[@]}"; do
-run_experiment "nmnist" "SpikingMLP" $t 64$vth
+run_experiment "nmnist" "SpikingMLP" $t 64 $vth
 done
 done
 
 for t in 2 4 8 16 32; do
 for vth in "${THRESHOLDS[@]}"; do
-run_experiment "cifar10" "SpikingVGG4" $t 16$vth
+run_experiment "cifar10" "SpikingVGG4" $t 16 $vth
 done
 done
 
 for t in 2 4 8 16 32; do
 for vth in "${THRESHOLDS[@]}"; do
-run_experiment "dvs_gesture" "SpikingVGG5" $t 16$vth
+run_experiment "dvs_gesture" "SpikingVGG5" $t 16 $vth
 done
 done
 
 for t in 2 4 8; do
 for vth in "${THRESHOLDS[@]}"; do
-run_experiment "nepic_kitchens" "SpikingVGG8" $t 4$vth
+run_experiment "nepic_kitchens" "SpikingVGG8" $t 4 $vth
+done
+done
+
+for t in 2 4 8; do
+for vth in "${THRESHOLDS[@]}"; do
+run_experiment "nepic_kitchens" "SpikingResNet18" $t 4 $vth
 done
 done
