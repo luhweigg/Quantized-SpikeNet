@@ -14,6 +14,7 @@ class SpikingVGG3(BaseSNNModel):
         out_classes: int,
         dropout: float = 0.5,
         init_stride: int = 1,
+        v_threshold: float = 1.0,
     ):
         super().__init__()
         sg = surrogate.ATan(alpha=1.5)
@@ -24,9 +25,18 @@ class SpikingVGG3(BaseSNNModel):
                 stride=init_stride,
                 use_batch_norm=False,
                 surrogate_func=sg,
+                v_threshold=v_threshold,
             ),
-            SpikingConvBlock(64, 128, use_batch_norm=True, surrogate_func=sg),
-            SpikingConvBlock(128, 256, use_batch_norm=True, surrogate_func=sg),
+            SpikingConvBlock(
+                64, 128, use_batch_norm=True, surrogate_func=sg, v_threshold=v_threshold
+            ),
+            SpikingConvBlock(
+                128,
+                256,
+                use_batch_norm=True,
+                surrogate_func=sg,
+                v_threshold=v_threshold,
+            ),
             layer.AdaptiveAvgPool2d((1, 1)),
             layer.Flatten(),
             layer.Dropout(dropout),
@@ -46,6 +56,7 @@ class SpikingVGG4(BaseSNNModel):
         out_classes: int,
         dropout: float = 0.5,
         init_stride: int = 1,
+        v_threshold: float = 1.0,
     ):
         super().__init__()
         sg = surrogate.ATan(alpha=1.5)
@@ -56,10 +67,25 @@ class SpikingVGG4(BaseSNNModel):
                 stride=init_stride,
                 use_batch_norm=False,
                 surrogate_func=sg,
+                v_threshold=v_threshold,
             ),
-            SpikingConvBlock(64, 128, use_batch_norm=True, surrogate_func=sg),
-            SpikingConvBlock(128, 256, use_batch_norm=True, surrogate_func=sg),
-            SpikingConvBlock(256, 512, use_batch_norm=True, surrogate_func=sg),
+            SpikingConvBlock(
+                64, 128, use_batch_norm=True, surrogate_func=sg, v_threshold=v_threshold
+            ),
+            SpikingConvBlock(
+                128,
+                256,
+                use_batch_norm=True,
+                surrogate_func=sg,
+                v_threshold=v_threshold,
+            ),
+            SpikingConvBlock(
+                256,
+                512,
+                use_batch_norm=True,
+                surrogate_func=sg,
+                v_threshold=v_threshold,
+            ),
             layer.AdaptiveAvgPool2d((1, 1)),
             layer.Flatten(),
             layer.Dropout(dropout),
@@ -79,6 +105,7 @@ class SpikingVGG5(BaseSNNModel):
         out_classes: int,
         dropout: float = 0.5,
         init_stride: int = 1,
+        v_threshold: float = 1.0,
     ):
         super().__init__()
         sg = surrogate.ATan(alpha=1.5)
@@ -89,11 +116,32 @@ class SpikingVGG5(BaseSNNModel):
                 stride=init_stride,
                 use_batch_norm=False,
                 surrogate_func=sg,
+                v_threshold=v_threshold,
             ),
-            SpikingConvBlock(64, 128, use_batch_norm=True, surrogate_func=sg),
-            SpikingConvBlock(128, 256, use_batch_norm=True, surrogate_func=sg),
-            SpikingConvBlock(256, 256, use_batch_norm=True, surrogate_func=sg),
-            SpikingConvBlock(256, 512, use_batch_norm=True, surrogate_func=sg),
+            SpikingConvBlock(
+                64, 128, use_batch_norm=True, surrogate_func=sg, v_threshold=v_threshold
+            ),
+            SpikingConvBlock(
+                128,
+                256,
+                use_batch_norm=True,
+                surrogate_func=sg,
+                v_threshold=v_threshold,
+            ),
+            SpikingConvBlock(
+                256,
+                256,
+                use_batch_norm=True,
+                surrogate_func=sg,
+                v_threshold=v_threshold,
+            ),
+            SpikingConvBlock(
+                256,
+                512,
+                use_batch_norm=True,
+                surrogate_func=sg,
+                v_threshold=v_threshold,
+            ),
             layer.AdaptiveAvgPool2d((1, 1)),
             layer.Flatten(),
             layer.Dropout(dropout),
@@ -113,10 +161,10 @@ class SpikingVGG11(BaseSNNModel):
         out_classes: int,
         dropout: float = 0.5,
         init_stride: int = 1,
+        v_threshold: float = 0.5,
     ):
         super().__init__()
         sg = surrogate.ATan(alpha=2.0)
-        v_th = 0.5
 
         self.network = nn.Sequential(
             SpikingConvBlock(
@@ -124,39 +172,47 @@ class SpikingVGG11(BaseSNNModel):
                 64,
                 stride=init_stride,
                 use_batch_norm=True,
-                v_threshold=v_th,
                 surrogate_func=sg,
+                v_threshold=v_threshold,
             ),
             SpikingConvBlock(
-                64, 128, use_batch_norm=True, v_threshold=v_th, surrogate_func=sg
+                64, 128, use_batch_norm=True, surrogate_func=sg, v_threshold=v_threshold
             ),
             SpikingConvBlock(
                 128,
                 256,
                 use_batch_norm=True,
                 use_max_pool=False,
-                v_threshold=v_th,
                 surrogate_func=sg,
+                v_threshold=v_threshold,
             ),
             SpikingConvBlock(
-                256, 256, use_batch_norm=True, v_threshold=v_th, surrogate_func=sg
+                256,
+                256,
+                use_batch_norm=True,
+                surrogate_func=sg,
+                v_threshold=v_threshold,
             ),
             SpikingConvBlock(
                 256,
                 512,
                 use_batch_norm=True,
                 use_max_pool=False,
-                v_threshold=v_th,
                 surrogate_func=sg,
+                v_threshold=v_threshold,
             ),
             SpikingConvBlock(
-                512, 512, use_batch_norm=True, v_threshold=v_th, surrogate_func=sg
+                512,
+                512,
+                use_batch_norm=True,
+                surrogate_func=sg,
+                v_threshold=v_threshold,
             ),
             layer.AdaptiveAvgPool2d((1, 1)),
             layer.Flatten(),
             layer.Dropout(dropout),
             layer.Linear(512, 4096, bias=True),
-            neuron.LIFNode(tau=2.0, v_threshold=v_th, surrogate_function=sg),
+            neuron.LIFNode(tau=2.0, v_threshold=v_threshold, surrogate_function=sg),
             layer.Dropout(dropout),
             layer.Linear(4096, out_classes, bias=True),
         )

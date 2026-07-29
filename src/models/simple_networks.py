@@ -9,13 +9,20 @@ class SpikingMLP(BaseSNNModel):
     """
 
     def __init__(
-        self, input_size: int, hidden_size: int, output_size: int, dropout: float = 0.5
+        self,
+        input_size: int,
+        hidden_size: int,
+        output_size: int,
+        dropout: float = 0.5,
+        v_threshold: float = 1.0,
     ):
         super().__init__()
         self.network = nn.Sequential(
             layer.Flatten(),
             layer.Linear(input_size, hidden_size, bias=False),
-            neuron.LIFNode(surrogate_function=surrogate.ATan()),
+            neuron.LIFNode(
+                surrogate_function=surrogate.ATan(), v_threshold=v_threshold
+            ),
             layer.Dropout(dropout),
             layer.Linear(hidden_size, output_size, bias=True),
         )
@@ -27,12 +34,18 @@ class CompactSpikingCNN(BaseSNNModel):
     SNN Architecture for small resolution images
     """
 
-    def __init__(self, in_channels: int, out_classes: int, dropout: float = 0.4):
+    def __init__(
+        self,
+        in_channels: int,
+        out_classes: int,
+        dropout: float = 0.4,
+        v_threshold: float = 1.0,
+    ):
         super().__init__()
         self.network = nn.Sequential(
-            SpikingConvBlock(in_channels, 32),
-            SpikingConvBlock(32, 64),
-            SpikingConvBlock(64, 128),
+            SpikingConvBlock(in_channels, 32, v_threshold=v_threshold),
+            SpikingConvBlock(32, 64, v_threshold=v_threshold),
+            SpikingConvBlock(64, 128, v_threshold=v_threshold),
             layer.AdaptiveAvgPool2d((1, 1)),
             layer.Flatten(),
             layer.Dropout(dropout),

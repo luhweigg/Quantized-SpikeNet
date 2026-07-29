@@ -45,10 +45,12 @@ def parse_args():
     parser.add_argument("--batch_size", type=int, default=64)
     parser.add_argument("--lr", type=float, default=1e-3)
     parser.add_argument("--Time", type=int, default=16)
+    parser.add_argument("--v_threshold", type=float, default=1.0)
+
     parser.add_argument("--save_dir", type=str, default="./saved_models")
     parser.add_argument("--resume", type=str, default=None)
     parser.add_argument("--use_wandb", action="store_true")
-    parser.add_argument("--wandb_project", type=str, default="quantized_spikenet")
+    parser.add_argument("--wandb_project", type=str, default="SNN-Predictive-Modeling")
     return parser.parse_args()
 
 
@@ -64,14 +66,20 @@ def main():
         args.architecture if args.architecture else model_config["default_architecture"]
     )
     arch_params = model_config["architectures"][selected_arch]
+    arch_params["v_threshold"] = args.v_threshold
 
     print(
-        f"Device: {device} | Dataset: {args.dataset} | Architecture: {selected_arch} | Epochs: {args.epochs} | Batch Size: {args.batch_size} | LR: {args.lr} | Time: {args.Time}"
+        f"Device: {device} | Dataset: {args.dataset} | Arch: {selected_arch} | "
+        f"Epochs: {args.epochs} | Batch: {args.batch_size} | LR: {args.lr} | "
+        f"Time: {args.Time} | V_th: {args.v_threshold}"
     )
+
+    run_name = f"{selected_arch}_T{args.Time}_Vth{args.v_threshold}"
 
     if args.use_wandb:
         wandb.init(
             project=args.wandb_project,
+            name=run_name,
             config={
                 **vars(args),
                 "architecture": selected_arch,
@@ -119,7 +127,9 @@ def main():
         )
     else:
         current_time = datetime.now().strftime("%Y%m%d_%H%M%S")
-        args.save_dir = os.path.join(args.save_dir, args.dataset, f"run_{current_time}")
+        folder_name = f"{run_name}_{current_time}"
+
+        args.save_dir = os.path.join(args.save_dir, args.dataset, folder_name)
         resume_path = os.path.join(args.save_dir, "checkpoint_latest.pth")
 
     os.makedirs(args.save_dir, exist_ok=True)

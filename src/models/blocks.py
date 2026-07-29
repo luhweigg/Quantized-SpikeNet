@@ -66,11 +66,15 @@ class SpikingConvBlock(nn.Sequential):
 class SpikingResidualBlock(nn.Module):
     """
     Bloc résiduel pour architectures ResNet SNN.
-    L'addition s'effectue avant l'activation SNN finale.
     """
 
     def __init__(
-        self, in_channels: int, out_channels: int, stride: int = 1, surrogate_func=None
+        self,
+        in_channels: int,
+        out_channels: int,
+        stride: int = 1,
+        surrogate_func=None,
+        v_threshold: float = 1.0,
     ):
         super().__init__()
         self.conv1 = layer.Conv2d(
@@ -83,9 +87,9 @@ class SpikingResidualBlock(nn.Module):
         )
         self.bn1 = layer.BatchNorm2d(out_channels)
         self.node1 = (
-            neuron.LIFNode(surrogate_function=surrogate_func)
+            neuron.LIFNode(surrogate_function=surrogate_func, v_threshold=v_threshold)
             if surrogate_func
-            else neuron.LIFNode()
+            else neuron.LIFNode(v_threshold=v_threshold)
         )
 
         self.conv2 = layer.Conv2d(
@@ -103,9 +107,9 @@ class SpikingResidualBlock(nn.Module):
             )
 
         self.node2 = (
-            neuron.LIFNode(surrogate_function=surrogate_func)
+            neuron.LIFNode(surrogate_function=surrogate_func, v_threshold=v_threshold)
             if surrogate_func
-            else neuron.LIFNode()
+            else neuron.LIFNode(v_threshold=v_threshold)
         )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:

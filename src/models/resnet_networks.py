@@ -8,7 +8,13 @@ class SpikingResNet18(BaseSNNModel):
     Architecture Spiking ResNet-18.
     """
 
-    def __init__(self, in_channels: int, out_classes: int, dropout: float = 0.5):
+    def __init__(
+        self,
+        in_channels: int,
+        out_classes: int,
+        dropout: float = 0.5,
+        v_threshold: float = 1.0,
+    ):
         super().__init__()
         sg = surrogate.ATan(alpha=2.0)
 
@@ -21,15 +27,32 @@ class SpikingResNet18(BaseSNNModel):
                 use_batch_norm=True,
                 use_max_pool=True,
                 surrogate_func=sg,
+                v_threshold=v_threshold,
             ),
-            SpikingResidualBlock(64, 64, stride=1, surrogate_func=sg),
-            SpikingResidualBlock(64, 64, stride=1, surrogate_func=sg),
-            SpikingResidualBlock(64, 128, stride=2, surrogate_func=sg),
-            SpikingResidualBlock(128, 128, stride=1, surrogate_func=sg),
-            SpikingResidualBlock(128, 256, stride=2, surrogate_func=sg),
-            SpikingResidualBlock(256, 256, stride=1, surrogate_func=sg),
-            SpikingResidualBlock(256, 512, stride=2, surrogate_func=sg),
-            SpikingResidualBlock(512, 512, stride=1, surrogate_func=sg),
+            SpikingResidualBlock(
+                64, 64, stride=1, surrogate_func=sg, v_threshold=v_threshold
+            ),
+            SpikingResidualBlock(
+                64, 64, stride=1, surrogate_func=sg, v_threshold=v_threshold
+            ),
+            SpikingResidualBlock(
+                64, 128, stride=2, surrogate_func=sg, v_threshold=v_threshold
+            ),
+            SpikingResidualBlock(
+                128, 128, stride=1, surrogate_func=sg, v_threshold=v_threshold
+            ),
+            SpikingResidualBlock(
+                128, 256, stride=2, surrogate_func=sg, v_threshold=v_threshold
+            ),
+            SpikingResidualBlock(
+                256, 256, stride=1, surrogate_func=sg, v_threshold=v_threshold
+            ),
+            SpikingResidualBlock(
+                256, 512, stride=2, surrogate_func=sg, v_threshold=v_threshold
+            ),
+            SpikingResidualBlock(
+                512, 512, stride=1, surrogate_func=sg, v_threshold=v_threshold
+            ),
             layer.AdaptiveAvgPool2d((1, 1)),
             layer.Flatten(),
             layer.Dropout(dropout),
