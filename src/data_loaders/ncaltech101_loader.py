@@ -1,7 +1,7 @@
 import torch
 import tonic
 import tonic.transforms as transforms
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, random_split
 
 
 def custom_collate_fn(batch):
@@ -10,10 +10,12 @@ def custom_collate_fn(batch):
     return events, targets
 
 
-def get_ncaltech101_loaders(batch_size: int, time_steps: int, num_workers: int = 4):
+def get_ncaltech101_loaders(
+    batch_size: int, time_steps: int, num_workers: int = 4, split_seed: int = 42
+):
     sensor_size = tonic.datasets.NCALTECH101.sensor_size
 
-    train_transform = transforms.Compose(
+    transform = transforms.Compose(
         [
             transforms.RandomFlipPolarity(),
             transforms.DropEvent(p=0.1),
@@ -26,16 +28,22 @@ def get_ncaltech101_loaders(batch_size: int, time_steps: int, num_workers: int =
         ]
     )
 
-    train_set = tonic.datasets.NCALTECH101(save_to="./data", train=True)
-    test_set = tonic.datasets.NCALTECH101(save_to="./data", train=False)
+    dataset = tonic.datasets.NCALTECH101(save_to="./data")
+
+    train_size = int(0.8 * len(dataset))
+    test_size = len(dataset) - train_size
+    generator = torch.Generator().manual_seed(split_seed)
+    train_subset, test_subset = random_split(
+        dataset, [train_size, test_size], generator=generator
+    )
 
     cached_train = tonic.DiskCachedDataset(
-        train_set,
-        cache_path="./data/cache/ncaltech101/train",
-        transform=train_transform,
+        train_subset, cache_path="./data/cache/ncaltech101/train", transform=transform
     )
     cached_test = tonic.DiskCachedDataset(
-        test_set, cache_path="./data/cache/ncaltech101/test", transform=test_transform
+        test_subset,
+        cache_path="./data/cache/ncaltech101/test",
+        transform=test_transform,
     )
 
     train_loader = DataLoader(

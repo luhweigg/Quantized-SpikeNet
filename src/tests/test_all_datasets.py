@@ -2,18 +2,18 @@ import subprocess
 import sys
 
 DATASETS = [
-    "nmnist",
-    "cifar10",
-    "dvs_gesture",
-    "nepic_kitchens",
+    # "nmnist",
+    # "cifar10",
+    # "dvs_gesture",
+    # "nepic_kitchens",
     "ncaltech101",
     "poker_dvs",
-    "shd",
+    # "shd",
     "asl_dvs",
     "hardvs",
-    "dvs_lip",
-    "ntidigits",
-    "ssc",
+    # "dvs_lip",
+    "dsec",
+    # "ssc",
 ]
 
 

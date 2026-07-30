@@ -1,0 +1,9 @@
+{
+    "default_architecture": "SpikingResNet34",
+    "architectures": {
+        "SpikingResNet34": {
+            "in_channels": 2,
+            "out_classes": 10
+        }
+    }
+}
