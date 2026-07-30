@@ -34,11 +34,13 @@ def parse_args():
         choices=[
             "SpikingMLP",
             "CompactSpikingCNN",
+            "Spiking1DCNN",
             "SpikingVGG3",
             "SpikingVGG4",
             "SpikingVGG5",
             "SpikingVGG8",
             "SpikingResNet18",
+            "SpikingResNet34",
         ],
     )
     parser.add_argument("--epochs", type=int, default=20)
