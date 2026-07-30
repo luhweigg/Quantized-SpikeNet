@@ -7,12 +7,8 @@ DATASETS = [
     # "dvs_gesture",
     # "nepic_kitchens",
     "ncaltech101",
-    "poker_dvs",
     # "shd",
-    "asl_dvs",
-    "hardvs",
     # "dvs_lip",
-    "dsec",
     # "ssc",
 ]
 
