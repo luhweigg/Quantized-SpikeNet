@@ -30,7 +30,7 @@ def test_datasets():
             "python", "main.py",
             "--dataset", ds,
             "--epochs", "1",
-            "--batch_size", "2",
+            "--batch_size", "128",
             "--Time", "2"
         ]
         
