@@ -1,5 +1,5 @@
 {
-    "default_architecture": "SpikingVGG5",
+    "default_architecture": "SpikingVGG4",
     "architectures": {
         "SpikingMLP": {
             "input_size": 2048,
