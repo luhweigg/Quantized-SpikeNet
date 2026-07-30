@@ -1,5 +1,6 @@
+import os
 import torch
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, random_split
 from spikingjelly.datasets.hardvs import HARDVS
 
 
@@ -9,20 +10,23 @@ def custom_collate_fn(batch):
     return events, targets
 
 
-def get_hardvs_loaders(batch_size: int, time_steps: int, num_workers: int = 4):
-    train_set = HARDVS(
+def get_hardvs_loaders(
+    batch_size: int, time_steps: int, num_workers: int = 4, split_seed: int = 42
+):
+    os.makedirs("./data/HARDVS", exist_ok=True)
+
+    dataset = HARDVS(
         root="./data/HARDVS",
-        train=True,
         data_type="frame",
         frames_number=time_steps,
         split_by="number",
     )
-    test_set = HARDVS(
-        root="./data/HARDVS",
-        train=False,
-        data_type="frame",
-        frames_number=time_steps,
-        split_by="number",
+
+    train_size = int(0.8 * len(dataset))
+    test_size = len(dataset) - train_size
+    generator = torch.Generator().manual_seed(split_seed)
+    train_set, test_set = random_split(
+        dataset, [train_size, test_size], generator=generator
     )
 
     train_loader = DataLoader(

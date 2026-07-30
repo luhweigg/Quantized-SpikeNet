@@ -19,12 +19,12 @@ from src.data_loaders import (
     get_dvs_lip_loaders,
     get_hardvs_loaders,
     get_ncaltech101_loaders,
-    get_ncars_loaders,
     get_nepic_kitchens_loaders,
     get_nmnist_loaders,
+    get_ntidigits_loaders,
     get_poker_dvs_loaders,
     get_shd_loaders,
-    get_ucf101_dvs_loaders,
+    get_ssc_loaders,
 )
 
 DATA_LOADERS = {
@@ -34,12 +34,12 @@ DATA_LOADERS = {
     "dvs_lip": get_dvs_lip_loaders,
     "hardvs": get_hardvs_loaders,
     "ncaltech101": get_ncaltech101_loaders,
-    "ncars": get_ncars_loaders,
     "nmnist": get_nmnist_loaders,
+    "ntidigits": get_ntidigits_loaders,
     "nepic_kitchens": get_nepic_kitchens_loaders,
     "poker_dvs": get_poker_dvs_loaders,
     "shd": get_shd_loaders,
-    "ucf101_dvs": get_ucf101_dvs_loaders,
+    "ssc": get_ssc_loaders,
 }
 
 ARCHITECTURES = {

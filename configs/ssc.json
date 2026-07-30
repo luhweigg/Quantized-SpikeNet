@@ -1,0 +1,10 @@
+{
+    "default_architecture": "Spiking1DCNN",
+    "architectures": {
+        "Spiking1DCNN": {
+            "in_channels": 1,
+            "out_classes": 35,
+            "dropout": 0.5
+        }
+    }
+}

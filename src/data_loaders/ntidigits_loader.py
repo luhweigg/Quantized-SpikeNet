@@ -4,43 +4,36 @@ import tonic.transforms as transforms
 from torch.utils.data import DataLoader
 
 
-def custom_collate_fn(batch):
+def audio_collate_fn(batch):
     events, targets = torch.utils.data.default_collate(batch)
     events = events.transpose(0, 1)
+    events = events.view(events.shape[0], events.shape[1], 1, -1)
     return events, targets
 
 
-def get_ncars_loaders(batch_size: int, time_steps: int, num_workers: int = 4):
-    sensor_size = tonic.datasets.NCARS.sensor_size
-
-    train_transform = transforms.Compose(
-        [
-            transforms.RandomFlipPolarity(),
-            transforms.DropEvent(p=0.1),
-            transforms.ToFrame(sensor_size=sensor_size, n_time_bins=time_steps),
-        ]
-    )
-    test_transform = transforms.Compose(
+def get_ntidigits_loaders(batch_size: int, time_steps: int, num_workers: int = 4):
+    sensor_size = tonic.datasets.NTIDIGITS18.sensor_size
+    transform = transforms.Compose(
         [
             transforms.ToFrame(sensor_size=sensor_size, n_time_bins=time_steps),
         ]
     )
 
-    train_set = tonic.datasets.NCARS(save_to="./data", train=True)
-    test_set = tonic.datasets.NCARS(save_to="./data", train=False)
+    train_set = tonic.datasets.NTIDIGITS18(save_to="./data", train=True)
+    test_set = tonic.datasets.NTIDIGITS18(save_to="./data", train=False)
 
     cached_train = tonic.DiskCachedDataset(
-        train_set, cache_path="./data/cache/ncars/train", transform=train_transform
+        train_set, cache_path="./data/cache/ntidigits/train", transform=transform
     )
     cached_test = tonic.DiskCachedDataset(
-        test_set, cache_path="./data/cache/ncars/test", transform=test_transform
+        test_set, cache_path="./data/cache/ntidigits/test", transform=transform
     )
 
     train_loader = DataLoader(
         cached_train,
         batch_size=batch_size,
         shuffle=True,
-        collate_fn=custom_collate_fn,
+        collate_fn=audio_collate_fn,
         num_workers=num_workers,
         pin_memory=True,
     )
@@ -48,7 +41,7 @@ def get_ncars_loaders(batch_size: int, time_steps: int, num_workers: int = 4):
         cached_test,
         batch_size=batch_size,
         shuffle=False,
-        collate_fn=custom_collate_fn,
+        collate_fn=audio_collate_fn,
         num_workers=num_workers,
         pin_memory=True,
     )

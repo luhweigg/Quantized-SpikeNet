@@ -1,3 +1,4 @@
+import os
 import torch
 from torch.utils.data import DataLoader, random_split
 from spikingjelly.datasets.asl_dvs import ASLDVS
@@ -12,6 +13,8 @@ def custom_collate_fn(batch):
 def get_asl_dvs_loaders(
     batch_size: int, time_steps: int, num_workers: int = 4, split_seed: int = 42
 ):
+    os.makedirs("./data/ASL-DVS", exist_ok=True)
+
     dataset = ASLDVS(
         root="./data/ASL-DVS",
         data_type="frame",

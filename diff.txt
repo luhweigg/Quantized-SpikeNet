@@ -1,0 +1,402 @@
+diff --git a/main.py b/main.py
+index e4e6c8b..1eaa70c 100644
+--- a/main.py
++++ b/main.py
+@@ -32,12 +32,12 @@ def parse_args():
+             "dvs_lip",
+             "hardvs",
+             "ncaltech101",
+-            "ncars",
+             "nepic_kitchens",
+             "nmnist",
++            "ntidigits",
+             "poker_dvs",
+             "shd",
+-            "ucf101_dvs",
++            "ssc",
+         ],
+     )
+     parser.add_argument(
+diff --git a/src/data_loaders/__init__.py b/src/data_loaders/__init__.py
+index 0d5b45d..749ee07 100644
+--- a/src/data_loaders/__init__.py
++++ b/src/data_loaders/__init__.py
+@@ -1,27 +1,27 @@
+-from .nmnist_loader import get_nmnist_loaders
++from .asl_dvs_loader import get_asl_dvs_loaders
+ from .cifar10_dvs_loader import get_cifar10_loaders
+ from .dvs_gesture_loader import get_dvs_gesture_loaders
+-from .nepic_kitchens_loader import get_nepic_kitchens_loaders
++from .dvs_lip_loader import get_dvs_lip_loaders
++from .hardvs_loader import get_hardvs_loaders
+ from .ncaltech101_loader import get_ncaltech101_loaders
+-from .ncars_loader import get_ncars_loaders
++from .nepic_kitchens_loader import get_nepic_kitchens_loaders
++from .nmnist_loader import get_nmnist_loaders
++from .ntidigits_loader import get_ntidigits_loaders
+ from .poker_dvs_loader import get_poker_dvs_loaders
+ from .shd_loader import get_shd_loaders
+-from .ucf101_dvs_loader import get_ucf101_dvs_loaders
+-from .asl_dvs_loader import get_asl_dvs_loaders
+-from .hardvs_loader import get_hardvs_loaders
+-from .dvs_lip_loader import get_dvs_lip_loaders
++from .ssc_loader import get_ssc_loaders
+ 
+ __all__ = [
+-    "get_nmnist_loaders",
++    "get_asl_dvs_loaders",
+     "get_cifar10_loaders",
+     "get_dvs_gesture_loaders",
+-    "get_nepic_kitchens_loaders",
++    "get_dvs_lip_loaders",
++    "get_hardvs_loaders",
+     "get_ncaltech101_loaders",
+-    "get_ncars_loaders",
++    "get_nepic_kitchens_loaders",
++    "get_nmnist_loaders",
++    "get_ntidigits_loaders",
+     "get_poker_dvs_loaders",
+     "get_shd_loaders",
+-    "get_ucf101_dvs_loaders",
+-    "get_asl_dvs_loaders",
+-    "get_hardvs_loaders",
+-    "get_dvs_lip_loaders",
++    "get_ssc_loaders",
+ ]
+diff --git a/src/data_loaders/asl_dvs_loader.py b/src/data_loaders/asl_dvs_loader.py
+index 3f82295..6ad9e6c 100644
+--- a/src/data_loaders/asl_dvs_loader.py
++++ b/src/data_loaders/asl_dvs_loader.py
+@@ -1,3 +1,4 @@
++import os
+ import torch
+ from torch.utils.data import DataLoader, random_split
+ from spikingjelly.datasets.asl_dvs import ASLDVS
+@@ -12,6 +13,8 @@ def custom_collate_fn(batch):
+ def get_asl_dvs_loaders(
+     batch_size: int, time_steps: int, num_workers: int = 4, split_seed: int = 42
+ ):
++    os.makedirs("./data/ASL-DVS", exist_ok=True)
++
+     dataset = ASLDVS(
+         root="./data/ASL-DVS",
+         data_type="frame",
+diff --git a/src/data_loaders/hardvs_loader.py b/src/data_loaders/hardvs_loader.py
+index d68a3b8..d5ff516 100644
+--- a/src/data_loaders/hardvs_loader.py
++++ b/src/data_loaders/hardvs_loader.py
+@@ -1,5 +1,6 @@
++import os
+ import torch
+-from torch.utils.data import DataLoader
++from torch.utils.data import DataLoader, random_split
+ from spikingjelly.datasets.hardvs import HARDVS
+ 
+ 
+@@ -9,20 +10,23 @@ def custom_collate_fn(batch):
+     return events, targets
+ 
+ 
+-def get_hardvs_loaders(batch_size: int, time_steps: int, num_workers: int = 4):
+-    train_set = HARDVS(
++def get_hardvs_loaders(
++    batch_size: int, time_steps: int, num_workers: int = 4, split_seed: int = 42
++):
++    os.makedirs("./data/HARDVS", exist_ok=True)
++
++    dataset = HARDVS(
+         root="./data/HARDVS",
+-        train=True,
+         data_type="frame",
+         frames_number=time_steps,
+         split_by="number",
+     )
+-    test_set = HARDVS(
+-        root="./data/HARDVS",
+-        train=False,
+-        data_type="frame",
+-        frames_number=time_steps,
+-        split_by="number",
++
++    train_size = int(0.8 * len(dataset))
++    test_size = len(dataset) - train_size
++    generator = torch.Generator().manual_seed(split_seed)
++    train_set, test_set = random_split(
++        dataset, [train_size, test_size], generator=generator
+     )
+ 
+     train_loader = DataLoader(
+diff --git a/src/data_loaders/ncaltech101_loader.py b/src/data_loaders/ncaltech101_loader.py
+index fb24e27..706219a 100644
+--- a/src/data_loaders/ncaltech101_loader.py
++++ b/src/data_loaders/ncaltech101_loader.py
+@@ -11,7 +11,7 @@ def custom_collate_fn(batch):
+ 
+ 
+ def get_ncaltech101_loaders(batch_size: int, time_steps: int, num_workers: int = 4):
+-    sensor_size = tonic.datasets.NCaltech101.sensor_size
++    sensor_size = tonic.datasets.NCALTECH101.sensor_size
+ 
+     train_transform = transforms.Compose(
+         [
+@@ -26,8 +26,8 @@ def get_ncaltech101_loaders(batch_size: int, time_steps: int, num_workers: int =
+         ]
+     )
+ 
+-    train_set = tonic.datasets.NCaltech101(save_to="./data", train=True)
+-    test_set = tonic.datasets.NCaltech101(save_to="./data", train=False)
++    train_set = tonic.datasets.NCALTECH101(save_to="./data", train=True)
++    test_set = tonic.datasets.NCALTECH101(save_to="./data", train=False)
+ 
+     cached_train = tonic.DiskCachedDataset(
+         train_set,
+diff --git a/src/data_loaders/ncars_loader.py b/src/data_loaders/ncars_loader.py
+deleted file mode 100644
+index d9564ab..0000000
+--- a/src/data_loaders/ncars_loader.py
++++ /dev/null
+@@ -1,55 +0,0 @@
+-import torch
+-import tonic
+-import tonic.transforms as transforms
+-from torch.utils.data import DataLoader
+-
+-
+-def custom_collate_fn(batch):
+-    events, targets = torch.utils.data.default_collate(batch)
+-    events = events.transpose(0, 1)
+-    return events, targets
+-
+-
+-def get_ncars_loaders(batch_size: int, time_steps: int, num_workers: int = 4):
+-    sensor_size = tonic.datasets.NCARS.sensor_size
+-
+-    train_transform = transforms.Compose(
+-        [
+-            transforms.RandomFlipPolarity(),
+-            transforms.DropEvent(p=0.1),
+-            transforms.ToFrame(sensor_size=sensor_size, n_time_bins=time_steps),
+-        ]
+-    )
+-    test_transform = transforms.Compose(
+-        [
+-            transforms.ToFrame(sensor_size=sensor_size, n_time_bins=time_steps),
+-        ]
+-    )
+-
+-    train_set = tonic.datasets.NCARS(save_to="./data", train=True)
+-    test_set = tonic.datasets.NCARS(save_to="./data", train=False)
+-
+-    cached_train = tonic.DiskCachedDataset(
+-        train_set, cache_path="./data/cache/ncars/train", transform=train_transform
+-    )
+-    cached_test = tonic.DiskCachedDataset(
+-        test_set, cache_path="./data/cache/ncars/test", transform=test_transform
+-    )
+-
+-    train_loader = DataLoader(
+-        cached_train,
+-        batch_size=batch_size,
+-        shuffle=True,
+-        collate_fn=custom_collate_fn,
+-        num_workers=num_workers,
+-        pin_memory=True,
+-    )
+-    test_loader = DataLoader(
+-        cached_test,
+-        batch_size=batch_size,
+-        shuffle=False,
+-        collate_fn=custom_collate_fn,
+-        num_workers=num_workers,
+-        pin_memory=True,
+-    )
+-    return train_loader, test_loader
+diff --git a/src/data_loaders/shd_loader.py b/src/data_loaders/shd_loader.py
+index fe0758a..641e66b 100644
+--- a/src/data_loaders/shd_loader.py
++++ b/src/data_loaders/shd_loader.py
+@@ -7,7 +7,7 @@ from torch.utils.data import DataLoader
+ def shd_collate_fn(batch):
+     events, targets = torch.utils.data.default_collate(batch)
+     events = events.transpose(0, 1)
+-    events = events.unsqueeze(2)
++    events = events.view(events.shape[0], events.shape[1], 1, -1)
+     return events, targets
+ 
+ 
+diff --git a/src/data_loaders/ucf101_dvs_loader.py b/src/data_loaders/ucf101_dvs_loader.py
+deleted file mode 100644
+index 73df3a4..0000000
+--- a/src/data_loaders/ucf101_dvs_loader.py
++++ /dev/null
+@@ -1,57 +0,0 @@
+-import torch
+-import tonic
+-import tonic.transforms as transforms
+-from torch.utils.data import DataLoader, random_split
+-
+-
+-def custom_collate_fn(batch):
+-    events, targets = torch.utils.data.default_collate(batch)
+-    events = events.transpose(0, 1)
+-    return events, targets
+-
+-
+-def get_ucf101_dvs_loaders(
+-    batch_size: int, time_steps: int, num_workers: int = 4, split_seed: int = 42
+-):
+-    sensor_size = tonic.datasets.UCF101DVS.sensor_size
+-
+-    transform = transforms.Compose(
+-        [
+-            transforms.Downsample(spatial_factor=0.5),
+-            transforms.ToFrame(sensor_size=(120, 170, 2), n_time_bins=time_steps),
+-        ]
+-    )
+-
+-    full_dataset = tonic.datasets.UCF101DVS(save_to="./data")
+-
+-    train_size = int(0.8 * len(full_dataset))
+-    test_size = len(full_dataset) - train_size
+-    generator = torch.Generator().manual_seed(split_seed)
+-    train_subset, test_subset = random_split(
+-        full_dataset, [train_size, test_size], generator=generator
+-    )
+-
+-    cached_train = tonic.DiskCachedDataset(
+-        train_subset, cache_path="./data/cache/ucf101/train", transform=transform
+-    )
+-    cached_test = tonic.DiskCachedDataset(
+-        test_subset, cache_path="./data/cache/ucf101/test", transform=transform
+-    )
+-
+-    train_loader = DataLoader(
+-        cached_train,
+-        batch_size=batch_size,
+-        shuffle=True,
+-        collate_fn=custom_collate_fn,
+-        num_workers=num_workers,
+-        pin_memory=True,
+-    )
+-    test_loader = DataLoader(
+-        cached_test,
+-        batch_size=batch_size,
+-        shuffle=False,
+-        collate_fn=custom_collate_fn,
+-        num_workers=num_workers,
+-        pin_memory=True,
+-    )
+-    return train_loader, test_loader
+diff --git a/src/engine/builder.py b/src/engine/builder.py
+index 723f187..6d296bc 100644
+--- a/src/engine/builder.py
++++ b/src/engine/builder.py
+@@ -19,12 +19,12 @@ from src.data_loaders import (
+     get_dvs_lip_loaders,
+     get_hardvs_loaders,
+     get_ncaltech101_loaders,
+-    get_ncars_loaders,
+     get_nepic_kitchens_loaders,
+     get_nmnist_loaders,
++    get_ntidigits_loaders,
+     get_poker_dvs_loaders,
+     get_shd_loaders,
+-    get_ucf101_dvs_loaders,
++    get_ssc_loaders,
+ )
+ 
+ DATA_LOADERS = {
+@@ -34,12 +34,12 @@ DATA_LOADERS = {
+     "dvs_lip": get_dvs_lip_loaders,
+     "hardvs": get_hardvs_loaders,
+     "ncaltech101": get_ncaltech101_loaders,
+-    "ncars": get_ncars_loaders,
+     "nmnist": get_nmnist_loaders,
++    "ntidigits": get_ntidigits_loaders,
+     "nepic_kitchens": get_nepic_kitchens_loaders,
+     "poker_dvs": get_poker_dvs_loaders,
+     "shd": get_shd_loaders,
+-    "ucf101_dvs": get_ucf101_dvs_loaders,
++    "ssc": get_ssc_loaders,
+ }
+ 
+ ARCHITECTURES = {
+diff --git a/src/tests/test_all_datasets.py b/src/tests/test_all_datasets.py
+index 1573dba..92de700 100644
+--- a/src/tests/test_all_datasets.py
++++ b/src/tests/test_all_datasets.py
+@@ -7,35 +7,43 @@ DATASETS = [
+     "dvs_gesture",
+     "nepic_kitchens",
+     "ncaltech101",
+-    "ncars",
+     "poker_dvs",
+     "shd",
+-    "ucf101_dvs",
+     "asl_dvs",
+     "hardvs",
+-    "dvs_lip"
++    "dvs_lip",
++    "ntidigits",
++    "ssc",
+ ]
+ 
++
+ def test_datasets():
+     print("Démarrage des tests d'intégration pour les 12 datasets...")
+-    print("Attention : Si les datasets ne sont pas encore téléchargés, ce script va déclencher leur téléchargement.")
++    print(
++        "Attention : Si les datasets ne sont pas encore téléchargés, ce script va déclencher leur téléchargement."
++    )
+     print("-" * 60)
+-    
++
+     failed_datasets = []
+ 
+     for ds in DATASETS:
+         print(f"\nTest en cours pour le dataset : {ds.upper()}...")
+-        
++
+         cmd = [
+-            "python", "main.py",
+-            "--dataset", ds,
+-            "--epochs", "1",
+-            "--batch_size", "128",
+-            "--Time", "2"
++            "python",
++            "main.py",
++            "--dataset",
++            ds,
++            "--epochs",
++            "1",
++            "--batch_size",
++            "128",
++            "--Time",
++            "2",
+         ]
+-        
++
+         result = subprocess.run(cmd, capture_output=True, text=True)
+-        
++
+         if result.returncode == 0:
+             print(f"SUCCÈS : {ds} a complété son époque d'entraînement sans erreur.")
+         else:
+@@ -47,11 +55,14 @@ def test_datasets():
+ 
+     print("\n" + "=" * 60)
+     if failed_datasets:
+-        print(f"Rapport final : {len(failed_datasets)} dataset(s) en échec : {', '.join(failed_datasets)}")
++        print(
++            f"Rapport final : {len(failed_datasets)} dataset(s) en échec : {', '.join(failed_datasets)}"
++        )
+         sys.exit(1)
+     else:
+         print("Rapport final : TOUS LES DATASETS SONT OPÉRATIONNELS !")
+         sys.exit(0)
+ 
++
+ if __name__ == "__main__":
+-    test_datasets()
+\ No newline at end of file
++    test_datasets()

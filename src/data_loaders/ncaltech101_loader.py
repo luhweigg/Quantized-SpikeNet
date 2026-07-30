@@ -11,7 +11,7 @@ def custom_collate_fn(batch):
 
 
 def get_ncaltech101_loaders(batch_size: int, time_steps: int, num_workers: int = 4):
-    sensor_size = tonic.datasets.NCaltech101.sensor_size
+    sensor_size = tonic.datasets.NCALTECH101.sensor_size
 
     train_transform = transforms.Compose(
         [
@@ -26,8 +26,8 @@ def get_ncaltech101_loaders(batch_size: int, time_steps: int, num_workers: int =
         ]
     )
 
-    train_set = tonic.datasets.NCaltech101(save_to="./data", train=True)
-    test_set = tonic.datasets.NCaltech101(save_to="./data", train=False)
+    train_set = tonic.datasets.NCALTECH101(save_to="./data", train=True)
+    test_set = tonic.datasets.NCALTECH101(save_to="./data", train=False)
 
     cached_train = tonic.DiskCachedDataset(
         train_set,

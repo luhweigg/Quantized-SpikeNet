@@ -32,12 +32,12 @@ def parse_args():
             "dvs_lip",
             "hardvs",
             "ncaltech101",
-            "ncars",
             "nepic_kitchens",
             "nmnist",
+            "ntidigits",
             "poker_dvs",
             "shd",
-            "ucf101_dvs",
+            "ssc",
         ],
     )
     parser.add_argument(
