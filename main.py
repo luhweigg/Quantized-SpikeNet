@@ -25,7 +25,20 @@ def parse_args():
         "--dataset",
         type=str,
         default="nmnist",
-        choices=["nmnist", "cifar10", "dvs_gesture", "nepic_kitchens"],
+        choices=[
+            "asl_dvs",
+            "cifar10",
+            "dvs_gesture",
+            "dvs_lip",
+            "hardvs",
+            "ncaltech101",
+            "ncars",
+            "nepic_kitchens",
+            "nmnist",
+            "poker_dvs",
+            "shd",
+            "ucf101_dvs",
+        ],
     )
     parser.add_argument(
         "--architecture",

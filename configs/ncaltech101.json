@@ -1,0 +1,25 @@
+{
+    "default_architecture": "SpikingVGG5",
+    "architectures": {
+        "CompactSpikingCNN": {
+            "in_channels": 2,
+            "out_classes": 101
+        },
+        "SpikingVGG4": {
+            "in_channels": 2,
+            "out_classes": 101,
+            "dropout": 0.5,
+            "init_stride": 2
+        },
+        "SpikingVGG5": {
+            "in_channels": 2,
+            "out_classes": 101,
+            "dropout": 0.5,
+            "init_stride": 2
+        },
+        "SpikingResNet18": {
+            "in_channels": 2,
+            "out_classes": 101
+        }
+    }
+}

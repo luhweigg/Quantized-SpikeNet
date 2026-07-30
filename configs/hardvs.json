@@ -1,0 +1,21 @@
+{
+    "default_architecture": "SpikingResNet34",
+    "architectures": {
+        "SpikingVGG8": {
+            "in_channels": 2,
+            "out_classes": 300,
+            "dropout": 0.5,
+            "init_stride": 4
+        },
+        "SpikingResNet18": {
+            "in_channels": 2,
+            "out_classes": 300
+        },
+        "SpikingResNet34": {
+            "in_channels": 2,
+            "out_classes": 300,
+            "dropout": 0.5,
+            "init_stride": 4
+        }
+    }
+}
