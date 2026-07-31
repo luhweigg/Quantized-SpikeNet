@@ -1,4 +1,3 @@
-import itertools
 import subprocess
 import os
 import json
