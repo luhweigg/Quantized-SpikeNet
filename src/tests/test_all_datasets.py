@@ -5,7 +5,7 @@ DATASETS = [
     #"nmnist",
     #"cifar10",
     #"dvs_gesture",
-    "nepic_kitchens",
+    #"nepic_kitchens",
     "ncaltech101",
     #"shd",
     #"dvs_lip",

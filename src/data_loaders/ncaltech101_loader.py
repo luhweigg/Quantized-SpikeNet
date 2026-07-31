@@ -13,22 +13,16 @@ def custom_collate_fn(batch):
 def get_ncaltech101_loaders(
     batch_size: int, time_steps: int, num_workers: int = 4, split_seed: int = 42
 ):
-    sensor_size = (128, 128, 2)
+    sensor_size = tonic.datasets.NCALTECH101.sensor_size
 
-    train_transform = transforms.Compose(
+    transform = transforms.Compose(
         [
-            transforms.Denoise(filter_time=10000),
-            transforms.ToFrame(sensor_size=sensor_size, n_time_bins=time_steps),
-        ]
-    )
-    test_transform = transforms.Compose(
-        [
-            transforms.Denoise(filter_time=10000),
+            transforms.Denoise(filter_time=10000), 
             transforms.ToFrame(sensor_size=sensor_size, n_time_bins=time_steps),
         ]
     )
 
-    dataset = tonic.datasets.NCALTECH101(save_to="./data", transform=train_transform)
+    dataset = tonic.datasets.NCALTECH101(save_to="./data", transform=transform)
 
     train_size = int(0.8 * len(dataset))
     test_size = len(dataset) - train_size
