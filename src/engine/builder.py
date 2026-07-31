@@ -16,6 +16,9 @@ from src.data_loaders import (
     get_cifar10_loaders,
     get_dvs_gesture_loaders,
     get_dvs_lip_loaders,
+    get_fmnist_loaders,
+    get_hardvs_loaders,
+    get_nav_gesture_loaders,
     get_ncaltech101_loaders,
     get_nepic_kitchens_loaders,
     get_nmnist_loaders,
@@ -23,18 +26,6 @@ from src.data_loaders import (
     get_smnist_loaders,
     get_ssc_loaders,
 )
-
-DATA_LOADERS = {
-    "cifar10": get_cifar10_loaders,
-    "dvs_gesture": get_dvs_gesture_loaders,
-    "dvs_lip": get_dvs_lip_loaders,
-    "ncaltech101": get_ncaltech101_loaders,
-    "nepic_kitchens": get_nepic_kitchens_loaders,
-    "nmnist": get_nmnist_loaders,
-    "shd": get_shd_loaders,
-    "smnist": get_smnist_loaders,
-    "ssc": get_ssc_loaders,
-}
 
 ARCHITECTURES = {
     "SpikingMLP": SpikingMLP,
@@ -46,6 +37,21 @@ ARCHITECTURES = {
     "SpikingVGG8": SpikingVGG8,
     "SpikingResNet18": SpikingResNet18,
     "SpikingResNet34": SpikingResNet34,
+}
+
+DATA_LOADERS = {
+    "cifar10": get_cifar10_loaders,
+    "dvs_gesture": get_dvs_gesture_loaders,
+    "dvs_lip": get_dvs_lip_loaders,
+    "fmnist": get_fmnist_loaders,
+    "hardvs": get_hardvs_loaders,
+    "nav_gesture": get_nav_gesture_loaders,
+    "ncaltech101": get_ncaltech101_loaders,
+    "nepic_kitchens": get_nepic_kitchens_loaders,
+    "nmnist": get_nmnist_loaders,
+    "shd": get_shd_loaders,
+    "smnist": get_smnist_loaders,
+    "ssc": get_ssc_loaders,
 }
 
 
