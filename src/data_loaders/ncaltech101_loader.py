@@ -1,11 +1,19 @@
 import torch
 import tonic
 import tonic.transforms as transforms
+import torch.nn.functional as F
 from torch.utils.data import DataLoader, random_split
 
 
 def custom_collate_fn(batch):
-    events, targets = torch.utils.data.default_collate(batch)
+    targets = torch.tensor([b[1] for b in batch])
+    events_list = []
+    
+    for b in batch:
+        ev = torch.as_tensor(b[0]).float()
+        ev = F.interpolate(ev, size=(128, 128), mode='bilinear', align_corners=False)
+        events_list.append(ev)
+    events = torch.stack(events_list)
     events = events.transpose(0, 1)
     return events, targets
 
@@ -17,7 +25,7 @@ def get_ncaltech101_loaders(
 
     transform = transforms.Compose(
         [
-            transforms.Denoise(filter_time=10000), 
+            transforms.Denoise(filter_time=10000),
             transforms.ToFrame(sensor_size=sensor_size, n_time_bins=time_steps),
         ]
     )
@@ -27,7 +35,6 @@ def get_ncaltech101_loaders(
     train_size = int(0.8 * len(dataset))
     test_size = len(dataset) - train_size
     generator = torch.Generator().manual_seed(split_seed)
-    
     train_subset, test_subset = random_split(
         dataset, [train_size, test_size], generator=generator
     )
@@ -40,6 +47,7 @@ def get_ncaltech101_loaders(
         num_workers=num_workers,
         pin_memory=True,
     )
+    
     test_loader = DataLoader(
         test_subset,
         batch_size=batch_size,
@@ -48,4 +56,5 @@ def get_ncaltech101_loaders(
         num_workers=num_workers,
         pin_memory=True,
     )
+    
     return train_loader, test_loader
