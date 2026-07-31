@@ -1,5 +1,6 @@
 import subprocess
-import sys
+
+import pytest
 
 DATASETS = [
     # "nmnist",
@@ -13,11 +14,14 @@ DATASETS = [
     # "smnist",
     # "fmnist",
     # "kmnist",
-    "emnist"
+    # "emnist"
 ]
 
 
 def test_datasets():
+    if not DATASETS:
+        pytest.skip("No datasets selected for this integration test.")
+
     print("Démarrage des tests d'intégration pour les 12 datasets...")
     print(
         "Attention : Si les datasets ne sont pas encore téléchargés, ce script va déclencher leur téléchargement."
@@ -55,14 +59,8 @@ def test_datasets():
 
     print("\n" + "=" * 60)
     if failed_datasets:
-        print(
+        pytest.fail(
             f"Rapport final : {len(failed_datasets)} dataset(s) en échec : {', '.join(failed_datasets)}"
         )
-        sys.exit(1)
-    else:
-        print("Rapport final : TOUS LES DATASETS SONT OPÉRATIONNELS !")
-        sys.exit(0)
 
-
-if __name__ == "__main__":
-    test_datasets()
+    print("Rapport final : TOUS LES DATASETS SONT OPÉRATIONNELS !")

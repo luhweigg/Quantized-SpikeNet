@@ -58,7 +58,17 @@ def _fake_build_components(*_args, **_kwargs):
     scheduler = DummyScheduler()
     criterion = torch.nn.CrossEntropyLoss()
     scaler = None
-    return model, train_loader, test_loader, optimizer, scheduler, criterion, scaler
+    accumulation_steps = 1
+    return (
+        model,
+        train_loader,
+        test_loader,
+        optimizer,
+        scheduler,
+        criterion,
+        scaler,
+        accumulation_steps,
+    )
 
 
 def _latest_run_dir(base_dir: Path, dataset: str) -> Path:
@@ -75,7 +85,7 @@ def test_main_resume_from_checkpoint_path(monkeypatch, tmp_path):
         return 0.5, 50.0
 
     def fake_evaluate(*_args, **_kwargs):
-        return 0.4, 51.0, 90.0, 0.001, 0.1
+        return 0.4, 51.0, 90.0, 0.001, 0.1, 0, 0
 
     def fake_quantize(*_args, **_kwargs):
         return {"weight": torch.tensor([1], dtype=torch.int8)}, {
@@ -100,6 +110,7 @@ def test_main_resume_from_checkpoint_path(monkeypatch, tmp_path):
         architecture=None,
         epochs=2,
         batch_size=2,
+        accumulation_steps=1,
         lr=1e-3,
         Time=4,
         save_dir=str(save_root),
@@ -124,6 +135,7 @@ def test_main_resume_from_checkpoint_path(monkeypatch, tmp_path):
         architecture=None,
         epochs=3,
         batch_size=2,
+        accumulation_steps=1,
         lr=1e-3,
         Time=4,
         save_dir=str(save_root),
@@ -146,6 +158,7 @@ def test_main_invalid_resume_path_raises(monkeypatch, tmp_path):
         architecture=None,
         epochs=1,
         batch_size=2,
+        accumulation_steps=1,
         lr=1e-3,
         Time=4,
         save_dir=str(tmp_path / "saved_models"),
@@ -164,7 +177,7 @@ def test_main_quantized_export_contract(monkeypatch, tmp_path):
         return 0.6, 45.0
 
     def fake_evaluate(*_args, **_kwargs):
-        return 0.5, 46.0, 88.0, 0.001, 0.1
+        return 0.5, 46.0, 88.0, 0.001, 0.1, 0, 0
 
     def fake_quantize(*_args, **_kwargs):
         return {
@@ -198,6 +211,7 @@ def test_main_quantized_export_contract(monkeypatch, tmp_path):
         architecture=None,
         epochs=1,
         batch_size=2,
+        accumulation_steps=1,
         lr=1e-3,
         Time=4,
         save_dir=str(save_root),

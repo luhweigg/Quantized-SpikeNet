@@ -72,6 +72,8 @@ def parse_args():
 def main():
     args = parse_args()
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    v_threshold = getattr(args, "v_threshold", 1.0)
+    accumulation_steps = getattr(args, "accumulation_steps", 1)
 
     config_path = os.path.join("configs", f"{args.dataset}.json")
     with open(config_path, "r") as f:
@@ -80,16 +82,16 @@ def main():
     selected_arch = (
         args.architecture if args.architecture else model_config["default_architecture"]
     )
-    arch_params = model_config["architectures"][selected_arch]
-    arch_params["v_threshold"] = args.v_threshold
+    arch_params = model_config["architectures"][selected_arch].copy()
+    arch_params["v_threshold"] = v_threshold
 
     print(
         f"Device: {device} | Dataset: {args.dataset} | Arch: {selected_arch} | "
         f"Epochs: {args.epochs} | Batch: {args.batch_size} | LR: {args.lr} | "
-        f"Time: {args.Time} | V_th: {args.v_threshold}"
+        f"Time: {args.Time} | V_th: {v_threshold}"
     )
 
-    run_name = f"{selected_arch}_T{args.Time}_Vth{args.v_threshold}"
+    run_name = f"{selected_arch}_T{args.Time}_Vth{v_threshold}"
 
     if args.use_wandb:
         wandb.init(
@@ -150,7 +152,7 @@ def main():
         )
     else:
         current_time = datetime.now().strftime("%Y%m%d_%H%M%S")
-        folder_name = f"{run_name}_{current_time}"
+        folder_name = f"run_{run_name}_{current_time}"
 
         args.save_dir = os.path.join(args.save_dir, args.dataset, folder_name)
         resume_path = os.path.join(args.save_dir, "checkpoint_latest.pth")
@@ -282,7 +284,7 @@ def main():
     quantized_weights, quantization_metadata = quantize_weights(
         model, num_bits=8, return_metadata=True
     )
-    _, _, _, _, _ = evaluate(model, test_loader, criterion, device)
+    evaluate(model, test_loader, criterion, device)
 
     quantized_path = os.path.join(args.save_dir, f"{args.dataset}_quantized.pth")
     torch.save(
