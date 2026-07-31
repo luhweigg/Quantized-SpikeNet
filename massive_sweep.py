@@ -18,9 +18,9 @@ DATASETS = [
     "ssc",
 ]
 
-TIME_STEPS = [4, 8, 12, 16, 20, 32]
+TIME_STEPS = [4, 8, 16, 32]
 THRESHOLDS = [0.5, 1.0, 1.5, 2.0]
-EPOCHS = 100
+EPOCHS = 25
 
 TARGET_BATCH_SIZE = 64
 
