@@ -3,6 +3,7 @@ import tonic
 import tonic.transforms as transforms
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
+from tonic.datasets.pokerdvs131 import POKERDVS131
 
 def custom_collate_fn(batch):
     targets = torch.tensor([b[1] for b in batch], dtype=torch.long)
@@ -17,13 +18,13 @@ def custom_collate_fn(batch):
     return events, targets
 
 def get_pokerdvs131_loaders(batch_size: int, time_steps: int, num_workers: int = 4):
-    sensor_size = tonic.datasets.POKERDVS131.sensor_size
+    sensor_size = POKERDVS131.sensor_size
     transform = transforms.Compose([
         transforms.ToFrame(sensor_size=sensor_size, n_time_bins=time_steps),
     ])
 
-    train_set = tonic.datasets.POKERDVS131(save_to="./data", train=True, transform=transform)
-    test_set = tonic.datasets.POKERDVS131(save_to="./data", train=False, transform=transform)
+    train_set = POKERDVS131(save_to="./data", train=True, transform=transform)
+    test_set = POKERDVS131(save_to="./data", train=False, transform=transform)
 
     if len(train_set.targets) > 0 and isinstance(train_set.targets[0], str):
         classes = sorted(list(set(train_set.targets)))
