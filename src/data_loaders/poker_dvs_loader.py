@@ -16,33 +16,28 @@ def custom_collate_fn(batch):
 
     events = torch.stack(events_list)
     events = events.transpose(0, 1)
-
     return events, targets
 
 
-def get_ncaltech101_loaders(
+def get_poker_dvs_loaders(
     batch_size: int, time_steps: int, num_workers: int = 4, split_seed: int = 42
 ):
-    sensor_size = tonic.datasets.NCALTECH101.sensor_size
-
+    sensor_size = tonic.datasets.POKERDVS.sensor_size
     transform = transforms.Compose(
         [
-            transforms.Denoise(filter_time=10000),
             transforms.ToFrame(sensor_size=sensor_size, n_time_bins=time_steps),
         ]
     )
 
-    dataset = tonic.datasets.NCALTECH101(save_to="./data", transform=transform)
+    dataset = tonic.datasets.POKERDVS(save_to="./data", transform=transform)
 
     classes = sorted(list(set(dataset.targets)))
     class_to_idx = {cls_name: i for i, cls_name in enumerate(classes)}
-
     dataset.target_transform = lambda target: class_to_idx[str(target)]
 
     train_size = int(0.8 * len(dataset))
     test_size = len(dataset) - train_size
     generator = torch.Generator().manual_seed(split_seed)
-
     train_subset, test_subset = random_split(
         dataset, [train_size, test_size], generator=generator
     )
@@ -55,7 +50,6 @@ def get_ncaltech101_loaders(
         num_workers=num_workers,
         pin_memory=True,
     )
-
     test_loader = DataLoader(
         test_subset,
         batch_size=batch_size,

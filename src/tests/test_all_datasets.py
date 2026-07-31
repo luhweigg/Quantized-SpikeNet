@@ -6,10 +6,13 @@ DATASETS = [
     # "cifar10",
     # "dvs_gesture",
     # "nepic_kitchens",
-    "ncaltech101",
+    # "ncaltech101",
     # "shd",
     # "dvs_lip",
     # "ssc",
+    "ncars",
+    "poker_dvs",
+    "smnist",
 ]
 
 
