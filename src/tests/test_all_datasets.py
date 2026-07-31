@@ -2,14 +2,14 @@ import subprocess
 import sys
 
 DATASETS = [
-    "nmnist",
-    "cifar10",
-    "dvs_gesture",
+    #"nmnist",
+    #"cifar10",
+    #"dvs_gesture",
     "nepic_kitchens",
     "ncaltech101",
-    "shd",
-    "dvs_lip",
-    "ssc",
+    #"shd",
+    #"dvs_lip",
+    #"ssc",
 ]
 
 
