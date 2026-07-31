@@ -32,7 +32,6 @@ def parse_args():
             "ncaltech101",
             "nepic_kitchens",
             "nmnist",
-            "pokerdvs131",
             "shd",
             "smnist",
             "ssc",

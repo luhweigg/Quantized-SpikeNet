@@ -11,7 +11,6 @@ DATASETS = [
     # "dvs_lip",
     # "ssc",
     # "smnist",
-    "pokerdvs131",
 ]
 
 
