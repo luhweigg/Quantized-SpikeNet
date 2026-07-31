@@ -32,16 +32,17 @@
             "in_channels": 2,
             "out_classes": 11,
             "dropout": 0.5,
-            "init_stride": 2
+            "init_stride": 1
         },
         "SpikingResNet18": {
             "in_channels": 2,
             "out_classes": 11,
-            "init_stride": 4
+            "init_stride": 2
         },
         "SpikingResNet34": {
             "in_channels": 2,
-            "out_classes": 11
+            "out_classes": 11,
+            "init_stride": 2
         }
     }
 }
