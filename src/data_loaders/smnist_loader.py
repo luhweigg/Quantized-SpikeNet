@@ -12,7 +12,7 @@ def smnist_collate_fn(batch):
     return events, targets
 
 def get_smnist_loaders(batch_size: int, time_steps: int, num_workers: int = 4):
-    sensor_size = (99, 2)
+    sensor_size = (99, 1, 2)
     
     transform = transforms.Compose([
         transforms.ToFrame(sensor_size=sensor_size, n_time_bins=time_steps),
@@ -21,7 +21,21 @@ def get_smnist_loaders(batch_size: int, time_steps: int, num_workers: int = 4):
     train_set = tonic.datasets.SMNIST(save_to="./data", train=True, transform=transform)
     test_set = tonic.datasets.SMNIST(save_to="./data", train=False, transform=transform)
 
-    train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True, collate_fn=smnist_collate_fn, num_workers=num_workers, pin_memory=True)
-    test_loader = DataLoader(test_set, batch_size=batch_size, shuffle=False, collate_fn=smnist_collate_fn, num_workers=num_workers, pin_memory=True)
+    train_loader = DataLoader(
+        train_set, 
+        batch_size=batch_size, 
+        shuffle=True, 
+        collate_fn=smnist_collate_fn, 
+        num_workers=num_workers, 
+        pin_memory=True
+    )
+    test_loader = DataLoader(
+        test_set, 
+        batch_size=batch_size, 
+        shuffle=False, 
+        collate_fn=smnist_collate_fn, 
+        num_workers=num_workers, 
+        pin_memory=True
+    )
     
     return train_loader, test_loader
