@@ -1,17 +1,10 @@
 {
-    "default_architecture": "SpikingVGG4",
+    "default_architecture": "Spiking1DCNN",
     "architectures": {
-        "SpikingVGG4": { 
-            "in_channels": 2, 
-            "out_classes": 10, 
-            "dropout": 0.3, 
-            "init_stride": 2 
-        },
-        "SpikingVGG5": { 
-            "in_channels": 2, 
-            "out_classes": 10, 
-            "dropout": 0.5, 
-            "init_stride": 2 
+        "Spiking1DCNN": {
+            "in_channels": 2,
+            "out_classes": 10,
+            "dropout": 0.5
         }
     }
 }
