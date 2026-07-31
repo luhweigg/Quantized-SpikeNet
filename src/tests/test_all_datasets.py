@@ -10,8 +10,6 @@ DATASETS = [
     # "shd",
     # "dvs_lip",
     # "ssc",
-    "ncars",
-    "poker_dvs",
     "smnist",
 ]
 
