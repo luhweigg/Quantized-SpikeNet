@@ -108,6 +108,8 @@ def evaluate(
     sparsity = 0.0
     power_watts = 0.0
     energy_joules = 0.0
+    total_spikes = 0.0
+    total_elements = 0.0
 
     if measure_consumption:
         for h in hooks:
@@ -123,8 +125,8 @@ def evaluate(
             energy_joules = spikes_per_inference * energy_per_spike
             power_watts = (energy_joules / time_per_inference) + static_power
         else:
-            total_spikes = 0
-            total_elements = 0
+            total_spikes = 0.0
+            total_elements = 0.0
 
     return (
         total_loss / len(dataloader),
