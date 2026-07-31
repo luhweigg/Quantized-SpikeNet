@@ -12,7 +12,8 @@ DATASETS = [
     # "ssc",
     # "smnist",
     # "fmnist",
-    "kmnist",
+    # "kmnist",
+    "emnist"
 ]
 
 

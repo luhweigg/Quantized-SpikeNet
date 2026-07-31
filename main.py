@@ -29,6 +29,7 @@ def parse_args():
             "cifar10",
             "dvs_gesture",
             "dvs_lip",
+            "emnist",
             "fmnist",
             "kmnist",
             "ncaltech101",
