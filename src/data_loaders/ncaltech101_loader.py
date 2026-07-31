@@ -15,41 +15,31 @@ def get_ncaltech101_loaders(
 ):
     sensor_size = (128, 128, 2)
 
-    transform = transforms.Compose(
+    train_transform = transforms.Compose(
         [
-            transforms.Resize(sensor_size=(128, 128)),
-            transforms.RandomFlipPolarity(),
-            transforms.DropEvent(p=0.1),
+            transforms.Denoise(filter_time=10000),
             transforms.ToFrame(sensor_size=sensor_size, n_time_bins=time_steps),
         ]
     )
     test_transform = transforms.Compose(
         [
-            transforms.Resize(sensor_size=(128, 128)),
+            transforms.Denoise(filter_time=10000),
             transforms.ToFrame(sensor_size=sensor_size, n_time_bins=time_steps),
         ]
     )
 
-    dataset = tonic.datasets.NCALTECH101(save_to="./data")
+    dataset = tonic.datasets.NCALTECH101(save_to="./data", transform=train_transform)
 
     train_size = int(0.8 * len(dataset))
     test_size = len(dataset) - train_size
     generator = torch.Generator().manual_seed(split_seed)
+    
     train_subset, test_subset = random_split(
         dataset, [train_size, test_size], generator=generator
     )
 
-    cached_train = tonic.DiskCachedDataset(
-        train_subset, cache_path="./data/cache/ncaltech101/train", transform=transform
-    )
-    cached_test = tonic.DiskCachedDataset(
-        test_subset,
-        cache_path="./data/cache/ncaltech101/test",
-        transform=test_transform,
-    )
-
     train_loader = DataLoader(
-        cached_train,
+        train_subset,
         batch_size=batch_size,
         shuffle=True,
         collate_fn=custom_collate_fn,
@@ -57,7 +47,7 @@ def get_ncaltech101_loaders(
         pin_memory=True,
     )
     test_loader = DataLoader(
-        cached_test,
+        test_subset,
         batch_size=batch_size,
         shuffle=False,
         collate_fn=custom_collate_fn,
