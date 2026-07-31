@@ -31,7 +31,6 @@ def parse_args():
             "dvs_lip",
             "fmnist",
             "hardvs",
-            "nav_gesture",
             "ncaltech101",
             "nepic_kitchens",
             "nmnist",

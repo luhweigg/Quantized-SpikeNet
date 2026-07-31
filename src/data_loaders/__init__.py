@@ -3,7 +3,6 @@ from .dvs_gesture_loader import get_dvs_gesture_loaders
 from .dvs_lip_loader import get_dvs_lip_loaders
 from .fmnist_loader import get_fmnist_loaders
 from .hardvs_loader import get_hardvs_loaders
-from .nav_gesture_loader import get_nav_gesture_loaders
 from .ncaltech101_loader import get_ncaltech101_loaders
 from .nepic_kitchens_loader import get_nepic_kitchens_loaders
 from .nmnist_loader import get_nmnist_loaders
@@ -17,7 +16,6 @@ __all__ = [
     "get_dvs_lip_loaders",
     "get_fmnist_loaders",
     "get_hardvs_loaders",
-    "get_nav_gesture_loaders",
     "get_ncaltech101_loaders",
     "get_nepic_kitchens_loaders",
     "get_nmnist_loaders",

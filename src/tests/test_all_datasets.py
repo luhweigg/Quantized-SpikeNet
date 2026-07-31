@@ -12,7 +12,6 @@ DATASETS = [
     # "ssc",
     # "smnist",
     "hardvs",
-    "nav_gesture",
     "fmnist",
 ]
 
