@@ -21,10 +21,18 @@ class SpikingResNet18(BaseSNNModel):
 
         self.network = nn.Sequential(
             SpikingResNetStem(in_channels, init_stride, sg, v_threshold),
-            SpikingResNetStage(64, 64, 2, stride=1, surrogate_func=sg, v_threshold=v_threshold),
-            SpikingResNetStage(64, 128, 2, stride=2, surrogate_func=sg, v_threshold=v_threshold),
-            SpikingResNetStage(128, 256, 2, stride=2, surrogate_func=sg, v_threshold=v_threshold),
-            SpikingResNetStage(256, 512, 2, stride=2, surrogate_func=sg, v_threshold=v_threshold),
+            SpikingResNetStage(
+                64, 64, 2, stride=1, surrogate_func=sg, v_threshold=v_threshold
+            ),
+            SpikingResNetStage(
+                64, 128, 2, stride=2, surrogate_func=sg, v_threshold=v_threshold
+            ),
+            SpikingResNetStage(
+                128, 256, 2, stride=2, surrogate_func=sg, v_threshold=v_threshold
+            ),
+            SpikingResNetStage(
+                256, 512, 2, stride=2, surrogate_func=sg, v_threshold=v_threshold
+            ),
             layer.AdaptiveAvgPool2d((1, 1)),
             layer.Flatten(),
             layer.Dropout(dropout),
@@ -51,10 +59,18 @@ class SpikingResNet34(BaseSNNModel):
 
         self.network = nn.Sequential(
             SpikingResNetStem(in_channels, init_stride, sg, v_threshold),
-            SpikingResNetStage(64, 64, 3, stride=1, surrogate_func=sg, v_threshold=v_threshold),
-            SpikingResNetStage(64, 128, 4, stride=2, surrogate_func=sg, v_threshold=v_threshold),
-            SpikingResNetStage(128, 256, 6, stride=2, surrogate_func=sg, v_threshold=v_threshold),
-            SpikingResNetStage(256, 512, 3, stride=2, surrogate_func=sg, v_threshold=v_threshold),
+            SpikingResNetStage(
+                64, 64, 3, stride=1, surrogate_func=sg, v_threshold=v_threshold
+            ),
+            SpikingResNetStage(
+                64, 128, 4, stride=2, surrogate_func=sg, v_threshold=v_threshold
+            ),
+            SpikingResNetStage(
+                128, 256, 6, stride=2, surrogate_func=sg, v_threshold=v_threshold
+            ),
+            SpikingResNetStage(
+                256, 512, 3, stride=2, surrogate_func=sg, v_threshold=v_threshold
+            ),
             layer.AdaptiveAvgPool2d((1, 1)),
             layer.Flatten(),
             layer.Dropout(dropout),
