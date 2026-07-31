@@ -11,8 +11,7 @@ DATASETS = [
     # "dvs_lip",
     # "ssc",
     # "smnist",
-    "hardvs",
-    "fmnist",
+    # "fmnist",
 ]
 
 
