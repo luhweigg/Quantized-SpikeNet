@@ -10,7 +10,8 @@ DATASETS = [
     # "shd",
     # "dvs_lip",
     # "ssc",
-    "smnist",
+    # "smnist",
+    "pokerdvs131",
 ]
 
 
