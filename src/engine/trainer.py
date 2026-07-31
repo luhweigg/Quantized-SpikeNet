@@ -122,6 +122,9 @@ def evaluate(
             spikes_per_inference = total_spikes / total if total > 0 else 0
             energy_joules = spikes_per_inference * energy_per_spike
             power_watts = (energy_joules / time_per_inference) + static_power
+        else:
+            total_spikes = 0
+            total_elements = 0
 
     return (
         total_loss / len(dataloader),
@@ -129,4 +132,6 @@ def evaluate(
         sparsity,
         energy_joules,
         power_watts,
+        total_spikes,
+        total_elements,
     )

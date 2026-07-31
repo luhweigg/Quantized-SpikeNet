@@ -56,7 +56,15 @@ DATA_LOADERS = {
 
 
 def build_components(
-    dataset, arch_name, arch_params, batch_size, time_steps, lr, epochs, device
+    dataset,
+    arch_name,
+    arch_params,
+    batch_size,
+    time_steps,
+    lr,
+    epochs,
+    device,
+    accumulation_steps,
 ):
     if dataset not in DATA_LOADERS:
         raise ValueError(f"Dataset {dataset} non supporté.")
@@ -71,4 +79,13 @@ def build_components(
     criterion = nn.CrossEntropyLoss()
     scaler = None
 
-    return model, train_loader, test_loader, optimizer, scheduler, criterion, scaler
+    return (
+        model,
+        train_loader,
+        test_loader,
+        optimizer,
+        scheduler,
+        criterion,
+        scaler,
+        accumulation_steps,
+    )

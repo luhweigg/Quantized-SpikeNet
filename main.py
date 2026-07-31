@@ -59,13 +59,13 @@ def parse_args():
     parser.add_argument("--epochs", type=int, default=20)
     parser.add_argument("--batch_size", type=int, default=64)
     parser.add_argument("--lr", type=float, default=1e-3)
+    parser.add_argument("--accumulation_steps", type=int, default=1)
     parser.add_argument("--Time", type=int, default=16)
     parser.add_argument("--v_threshold", type=float, default=1.0)
-
     parser.add_argument("--save_dir", type=str, default="./saved_models")
     parser.add_argument("--resume", type=str, default=None)
     parser.add_argument("--use_wandb", action="store_true")
-    parser.add_argument("--wandb_project", type=str, default="SNN-Predictive-Modeling")
+    parser.add_argument("--wandb_project", type=str, default="Quantized-SpikeNet")
     return parser.parse_args()
 
 
@@ -93,7 +93,7 @@ def main():
 
     if args.use_wandb:
         wandb.init(
-            project=args.wandb_project,
+            project=f"{args.wandb_project}_{args.dataset}",
             name=run_name,
             config={
                 **vars(args),
@@ -113,17 +113,25 @@ def main():
                     f"Resume checkpoint not found: {resume_candidate}"
                 )
 
-    model, train_loader, test_loader, optimizer, scheduler, criterion, scaler = (
-        build_components(
-            args.dataset,
-            selected_arch,
-            arch_params,
-            args.batch_size,
-            args.Time,
-            args.lr,
-            args.epochs,
-            device,
-        )
+    (
+        model,
+        train_loader,
+        test_loader,
+        optimizer,
+        scheduler,
+        criterion,
+        scaler,
+        accumulation_steps,
+    ) = build_components(
+        args.dataset,
+        selected_arch,
+        arch_params,
+        args.batch_size,
+        args.Time,
+        args.lr,
+        args.epochs,
+        device,
+        args.accumulation_steps,
     )
 
     sample_events, _ = next(iter(train_loader))
@@ -182,11 +190,23 @@ def main():
 
     for epoch in pbar:
         train_loss, train_acc = train_one_epoch(
-            model, train_loader, optimizer, criterion, device, scaler
+            model,
+            train_loader,
+            optimizer,
+            criterion,
+            device,
+            scaler,
+            accumulation_steps,
         )
-        test_loss, test_acc, test_sparsity, energy_joules, power_watts = evaluate(
-            model, test_loader, criterion, device, measure_consumption=True
-        )
+        (
+            test_loss,
+            test_acc,
+            test_sparsity,
+            energy_joules,
+            power_watts,
+            total_spikes,
+            total_elements,
+        ) = evaluate(model, test_loader, criterion, device, measure_consumption=True)
         scheduler.step()
 
         csv_logger.log(
@@ -243,6 +263,8 @@ def main():
                     "test/sparsity": test_sparsity,
                     "test/energy_joules": energy_joules * 1e9,
                     "test/power_watts": power_watts * 1e9,
+                    "test/total_spikes": total_spikes,
+                    "test/total_elements": total_elements,
                     "epoch": epoch + 1,
                 }
             )
