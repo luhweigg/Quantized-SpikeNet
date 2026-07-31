@@ -121,3 +121,64 @@ class SpikingResidualBlock(nn.Module):
         out = out + self.shortcut(x)
         out = self.node2(out)
         return out
+
+
+class SpikingResNetStem(SpikingConvBlock):
+    """
+    Shared initial stem used by the Spiking ResNet architectures.
+    """
+
+    def __init__(
+        self,
+        in_channels: int,
+        init_stride: int,
+        surrogate_func,
+        v_threshold: float,
+    ):
+        super().__init__(
+            in_channels,
+            64,
+            kernel_size=7,
+            stride=init_stride,
+            padding=3,
+            use_batch_norm=True,
+            use_max_pool=True,
+            surrogate_func=surrogate_func,
+            v_threshold=v_threshold,
+        )
+
+
+class SpikingResNetStage(nn.Sequential):
+    """
+    Shared residual stage builder used by the Spiking ResNet architectures.
+    """
+
+    def __init__(
+        self,
+        in_channels: int,
+        out_channels: int,
+        blocks: int,
+        stride: int,
+        surrogate_func,
+        v_threshold: float,
+    ):
+        layers = [
+            SpikingResidualBlock(
+                in_channels,
+                out_channels,
+                stride=stride,
+                surrogate_func=surrogate_func,
+                v_threshold=v_threshold,
+            )
+        ]
+        for _ in range(1, blocks):
+            layers.append(
+                SpikingResidualBlock(
+                    out_channels,
+                    out_channels,
+                    stride=1,
+                    surrogate_func=surrogate_func,
+                    v_threshold=v_threshold,
+                )
+            )
+        super().__init__(*layers)

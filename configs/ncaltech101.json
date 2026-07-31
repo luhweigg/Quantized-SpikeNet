@@ -36,7 +36,8 @@
         },
         "SpikingResNet18": {
             "in_channels": 2,
-            "out_classes": 101
+            "out_classes": 101,
+            "init_stride": 4
         },
         "SpikingResNet34": {
             "in_channels": 2,
