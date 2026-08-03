@@ -4,7 +4,6 @@ import json
 import time
 
 DATASETS = [
-    "cifar10",
     "dvs_gesture",
     "dvs_lip",
     "emnist",
@@ -19,8 +18,8 @@ DATASETS = [
 ]
 
 TIME_STEPS = [4, 8, 16, 32]
-THRESHOLDS = [0.5, 1.0, 1.5, 2.0]
-EPOCHS = 25
+THRESHOLDS = [0.5, 1.0, 1.5]
+EPOCHS = 20
 
 TARGET_BATCH_SIZE = 64
 
