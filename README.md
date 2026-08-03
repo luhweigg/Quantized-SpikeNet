@@ -74,7 +74,7 @@ uv run python main.py --dataset dvs_gesture --resume saved_models/dvs_gesture/ru
 
 | Argument | Type | Default | Description |
 | --- | --- | --- | --- |
-| `--dataset` | `str` | `nmnist` | Target dataset (`nmnist`, `cifar10`, `dvs_gesture`, `nepic_kitchens`) |
+| `--dataset` | `str` | `nmnist` | Target dataset (`nmnist`, `cifar10_dvs`, `dvs_gesture`, `nepic_kitchens`) |
 | `--architecture` | `str` | `None` | Specific model to use (e.g., `SpikingVGG8`, `SpikingResNet18`) |
 | `--epochs` | `int` | `20` | Maximum number of training epochs |
 | `--batch_size` | `int` | `64` | Number of samples per batch |

@@ -1,14 +1,17 @@
 import torch
 import time
 import os
+import sys
 import threading
 import subprocess
 from datetime import datetime
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from spikingjelly.activation_based.base import MemoryModule
 from src.models import SpikingMLP, SpikingVGG4, SpikingVGG5, SpikingVGG8
 
 DATASET = (
-    "nepic_kitchens"  # Choices : "nmnist", "cifar10", "dvs_gesture", "nepic_kitchens"
+    "nepic_kitchens"  # Choices : "nmnist", "cifar10_dvs", "dvs_gesture", "nepic_kitchens"
 )
 SIMULATION_TIME_MS = 20
 NOISE_RATE_HZ = 50.0
@@ -17,7 +20,7 @@ ASSUMED_POWER_WATTS = 250.0 if torch.cuda.is_available() else 80.0
 
 WEIGHTS_PATHS = {
     "nmnist": "networks/nmnist_best.pth",
-    "cifar10": "networks/cifar10_best.pth",
+    "cifar10_dvs": "networks/cifar10_dvs_best.pth",
     "dvs_gesture": "networks/dvs-gesture_best.pth",
     "nepic_kitchens": "networks/nepic_kitchens_best.pth",
 }
@@ -180,28 +183,28 @@ def run_pytorch_profiling():
     real_hardware_energy = used_power_watts * real_execution_time
 
     report_text = f"""
-==================================================
- PYTORCH ENERGY REPORT : {DATASET.upper()}
-==================================================
- Architecture        : {model.__class__.__name__}
- Simulated Time      : {SIMULATION_TIME_MS} ms
- Injected Noise      : {NOISE_RATE_HZ} Hz (Poisson)
---------------------------------------------------
- Total Simulated Neurons : {profiler.total_neurons:,}
- Total Generated Spikes  : {int(total_spikes):,}
---------------------------------------------------
- [A] THEORETICAL NETWORK ENERGY (Pure Computation)
- Energy (Joules)         : {energy_joules:.6e} J
- Net Power               : {theoretical_power_watts * 1000:.4f} mW
---------------------------------------------------
- [B] HARDWARE OVERHEAD ({device.type.upper()})
- Real Execution Time     : {real_execution_time:.4f} seconds
---------------------------------------------------
- [C] REAL HARDWARE ENERGY (Physical Estimation)
- Power Source            : {power_source}
- Average Power Draw      : {used_power_watts:.2f} W
- Real Energy Consumed    : {real_hardware_energy:.2f} Joules
-=================================================="""
+    ==================================================
+    PYTORCH ENERGY REPORT : {DATASET.upper()}
+    ==================================================
+    Architecture        : {model.__class__.__name__}
+    Simulated Time      : {SIMULATION_TIME_MS} ms
+    Injected Noise      : {NOISE_RATE_HZ} Hz (Poisson)
+    --------------------------------------------------
+    Total Simulated Neurons : {profiler.total_neurons:,}
+    Total Generated Spikes  : {int(total_spikes):,}
+    --------------------------------------------------
+    [A] THEORETICAL NETWORK ENERGY (Pure Computation)
+    Energy (Joules)         : {energy_joules:.6e} J
+    Net Power               : {theoretical_power_watts * 1000:.4f} mW
+    --------------------------------------------------
+    [B] HARDWARE OVERHEAD ({device.type.upper()})
+    Real Execution Time     : {real_execution_time:.4f} seconds
+    --------------------------------------------------
+    [C] REAL HARDWARE ENERGY (Physical Estimation)
+    Power Source            : {power_source}
+    Average Power Draw      : {used_power_watts:.2f} W
+    Real Energy Consumed    : {real_hardware_energy:.2f} Joules
+    =================================================="""
 
     print(report_text)
 

@@ -26,7 +26,7 @@ def parse_args():
         type=str,
         default="nmnist",
         choices=[
-            "cifar10",
+            "cifar10_dvs",
             "dvs_gesture",
             "dvs_lip",
             "emnist",

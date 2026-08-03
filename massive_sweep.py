@@ -31,7 +31,7 @@ SAFE_PHYSICAL_BATCH = {
     "emnist": 64,
     "shd": 64,
     "ssc": 64,
-    "cifar10": 32,
+    "cifar10_dvs": 32,
     "dvs_gesture": 16,
     "dvs_lip": 16,
     "ncaltech101": 16,
