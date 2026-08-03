@@ -34,8 +34,8 @@ Inside `work/`, you must create a folder named exactly `networks/`. This is wher
     work/
     ├── networks/                      <-- CREATE THIS FOLDER
     │   ├── nmnist_best.pth            <-- Upload your N-MNIST weights here
-    │   ├── cifar10_best.pth           <-- Upload your CIFAR-10 weights here
-    │   └── dvs-gesture_best.pth       <-- Upload your DVS weights here
+    │   ├── cifar10_dvs_best.pth           <-- Upload your CIFAR-10 weights here
+    │   └── dvs_gesture_best.pth       <-- Upload your DVS weights here
     │
     ├── spinnaker.cfg                  
     └── run_spinnaker.ipynb      <-- Upload the deployment script
@@ -52,7 +52,7 @@ In the `work/` folder, create a text file named exactly `spinnaker.cfg`. Paste t
 Open the `run_spinnaker.ipynb` file in the Jupyter interface.
 At the very top of the script, change the `DATASET` variable to the network you want to deploy:
 
-    DATASET = "cifar10"  # Options: "nmnist", "cifar10", "dvs_gesture"
+    DATASET = "cifar10_dvs"  # Options: "nmnist", "cifar10_dvs", "dvs_gesture"
 
 Run the cell.
 *Note: For large models like VGG5, the "Routing" phase can take 3 to 5 minutes as the supercomputer calculates millions of cable connections.*
@@ -63,7 +63,7 @@ Once the simulation prints `Simulation completed with success`, the script will 
 Navigate to the automatically generated `reports/` folder:
 
     work/reports/
-    └── cifar10/
+    └── cifar10_dvs/
         └── 2026-07-23-14-05-07-806431/
             └── energy_report.csv       <-- YOUR RESULTS ARE HERE
 

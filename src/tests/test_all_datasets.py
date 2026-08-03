@@ -4,7 +4,7 @@ import pytest
 
 DATASETS = [
     # "nmnist",
-    # "cifar10",
+    # "cifar10_dvs",
     # "dvs_gesture",
     # "nepic_kitchens",
     # "ncaltech101",

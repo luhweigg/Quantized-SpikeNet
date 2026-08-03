@@ -12,7 +12,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 CONFIG_DIR = PROJECT_ROOT / "configs"
 
 DATASET_SHAPES = {
-    "cifar10": {"kind": "2d", "channels": 2, "height": 28, "width": 28},
+    "cifar10_dvs": {"kind": "2d", "channels": 2, "height": 28, "width": 28},
     "dvs_gesture": {"kind": "2d", "channels": 2, "height": 128, "width": 128},
     "dvs_lip": {"kind": "2d", "channels": 2, "height": 128, "width": 128},
     "emnist": {"kind": "2d", "channels": 1, "height": 128, "width": 128},
@@ -27,7 +27,7 @@ DATASET_SHAPES = {
 }
 
 MLP_INPUT_SIZES = {
-    "cifar10": 1568,
+    "cifar10_dvs": 1568,
     "dvs_gesture": 32768,
     "dvs_lip": 32768,
     "emnist": 16384,

@@ -25,7 +25,7 @@ The framework provides specific architectures tuned for event-based vision tasks
 | Dataset | Default Architecture | Task | Classes |
 | :--- | :--- | :--- | :---: |
 | **N-MNIST** | `SpikingMLP` | Neuromorphic Digit Recognition | 10 |
-| **CIFAR10-DVS** | `CompactSpikingCNN` / `SpikingVGG4` | Complex Object Classification | 10 |
+| **CIFAR10_DVS** | `CompactSpikingCNN` / `SpikingVGG4` | Complex Object Classification | 10 |
 | **DVS Gesture** | `SpikingVGG5` | Dynamic Hand Gesture Recognition | 11 |
 | **N-EPIC Kitchens** | `SpikingVGG8` / `SpikingResNet18` | Ego-centric Action Recognition | Multi |
 

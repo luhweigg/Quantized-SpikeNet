@@ -21,7 +21,7 @@ ASSUMED_POWER_WATTS = 250.0 if torch.cuda.is_available() else 80.0
 WEIGHTS_PATHS = {
     "nmnist": "networks/nmnist_best.pth",
     "cifar10_dvs": "networks/cifar10_dvs_best.pth",
-    "dvs_gesture": "networks/dvs-gesture_best.pth",
+    "dvs_gesture": "networks/dvs_gesture_best.pth",
     "nepic_kitchens": "networks/nepic_kitchens_best.pth",
 }
 
@@ -116,7 +116,7 @@ def run_pytorch_profiling():
     if DATASET == "nmnist":
         model = SpikingMLP(input_size=2312, hidden_size=256, output_size=10).to(device)
         input_shape = (2, 34, 34)
-    elif DATASET == "cifar10":
+    elif DATASET == "cifar10_dvs":
         model = SpikingVGG4(in_channels=2, out_classes=10).to(device)
         input_shape = (2, 32, 32)
     elif DATASET == "dvs_gesture":

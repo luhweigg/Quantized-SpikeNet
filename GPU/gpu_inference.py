@@ -19,7 +19,7 @@ BATCH_SIZE = 16
 WEIGHTS_PATHS = {
     "nmnist": "networks/nmnist_best.pth",
     "cifar10_dvs": "networks/cifar10_dvs_best.pth",
-    "dvs_gesture": "networks/dvs-gesture_best.pth",
+    "dvs_gesture": "networks/dvs_gesture_best.pth",
     "nepic_kitchens": "networks/nepic_kitchens_best.pth",
 }
 

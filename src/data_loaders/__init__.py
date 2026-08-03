@@ -1,4 +1,4 @@
-from .cifar10_dvs_loader import get_cifar10_loaders
+from .cifar10_dvs_loader import get_cifar10_dvs_loaders
 from .dvs_gesture_loader import get_dvs_gesture_loaders
 from .dvs_lip_loader import get_dvs_lip_loaders
 from .emnist_loader import get_emnist_loaders
@@ -12,7 +12,7 @@ from .smnist_loader import get_smnist_loaders
 from .ssc_loader import get_ssc_loaders
 
 __all__ = [
-    "get_cifar10_loaders",
+    "get_cifar10_dvs_loaders",
     "get_dvs_gesture_loaders",
     "get_dvs_lip_loaders",
     "get_emnist_loaders",

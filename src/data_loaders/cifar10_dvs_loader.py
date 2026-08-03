@@ -10,7 +10,7 @@ def custom_collate_fn(batch):
     return events, targets
 
 
-def get_cifar10_loaders(
+def get_cifar10_dvs_loaders(
     batch_size: int, time_steps: int, num_workers: int = 4, split_seed: int = 42
 ):
     tonic.datasets.CIFAR10DVS.url = "https://ndownloader.figshare.com/files/38023437"

@@ -13,7 +13,7 @@ from src.models import (
     SpikingResNet34,
 )
 from src.data_loaders import (
-    get_cifar10_loaders,
+    get_cifar10_dvs_loaders,
     get_dvs_gesture_loaders,
     get_dvs_lip_loaders,
     get_emnist_loaders,
@@ -40,7 +40,7 @@ ARCHITECTURES = {
 }
 
 DATA_LOADERS = {
-    "cifar10": get_cifar10_loaders,
+    "cifar10_dvs": get_cifar10_dvs_loaders,
     "dvs_gesture": get_dvs_gesture_loaders,
     "dvs_lip": get_dvs_lip_loaders,
     "emnist": get_emnist_loaders,
