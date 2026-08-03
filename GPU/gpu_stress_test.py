@@ -10,9 +10,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from spikingjelly.activation_based.base import MemoryModule
 from src.models import SpikingMLP, SpikingVGG4, SpikingVGG5, SpikingVGG8
 
-DATASET = (
-    "nepic_kitchens"  # Choices : "nmnist", "cifar10_dvs", "dvs_gesture", "nepic_kitchens"
-)
+DATASET = "nepic_kitchens"  # Choices : "nmnist", "cifar10_dvs", "dvs_gesture", "nepic_kitchens"
 SIMULATION_TIME_MS = 20
 NOISE_RATE_HZ = 50.0
 ENERGY_PER_SPIKE_JOULES = 0.9e-12

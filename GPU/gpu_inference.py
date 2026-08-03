@@ -102,7 +102,12 @@ def get_test_dataloader(dataset_name, batch_size):
         "dvs_gesture": (SIMULATION_TIME_MS, batch_size, 2, 128, 128),
         "nepic_kitchens": (SIMULATION_TIME_MS, batch_size, 1, 304, 384),
     }
-    num_classes = {"nmnist": 10, "cifar10_dvs": 10, "dvs_gesture": 11, "nepic_kitchens": 8}
+    num_classes = {
+        "nmnist": 10,
+        "cifar10_dvs": 10,
+        "dvs_gesture": 11,
+        "nepic_kitchens": 8,
+    }
 
     x_fake = torch.rand(shapes[dataset_name]) > 0.95
     y_fake = torch.randint(0, num_classes[dataset_name], (batch_size,))
