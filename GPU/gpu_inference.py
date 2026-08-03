@@ -210,7 +210,6 @@ def run_real_inference_pytorch():
 
     print(report_text)
 
-    # Save to file structure
     timestamp = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
     report_dir = os.path.join("reports", DATASET, timestamp)
     os.makedirs(report_dir, exist_ok=True)
