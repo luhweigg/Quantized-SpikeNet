@@ -1,13 +1,45 @@
 {
     "default_architecture": "SpikingVGG5",
     "architectures": {
+        "SpikingMLP": {
+            "input_size": 32768,
+            "hidden_size": 256,
+            "output_size": 101
+        },
+        "CompactSpikingCNN": {
+            "in_channels": 2,
+            "out_classes": 101
+        },
+        "SpikingVGG3": {
+            "in_channels": 2,
+            "out_classes": 101,
+            "dropout": 0.5,
+            "init_stride": 1
+        },
+        "SpikingVGG4": {
+            "in_channels": 2,
+            "out_classes": 101,
+            "dropout": 0.5,
+            "init_stride": 2
+        },
         "SpikingVGG5": {
             "in_channels": 2,
             "out_classes": 101,
             "dropout": 0.5,
             "init_stride": 2
         },
+        "SpikingVGG8": {
+            "in_channels": 2,
+            "out_classes": 101,
+            "dropout": 0.5,
+            "init_stride": 1
+        },
         "SpikingResNet18": {
+            "in_channels": 2,
+            "out_classes": 101,
+            "init_stride": 2
+        },
+        "SpikingResNet34": {
             "in_channels": 2,
             "out_classes": 101,
             "init_stride": 2
