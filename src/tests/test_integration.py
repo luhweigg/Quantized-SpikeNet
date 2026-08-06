@@ -54,10 +54,10 @@ def test_quantization_returns_metadata():
 #     )
 
 #     train_loader_a, test_loader_a = cifar10_dvs_loader.get_cifar10_loaders(
-#         batch_size=2, n_time_bins=4, num_workers=0, split_seed=123
+#         batch_size=2, time_steps=4, num_workers=0, split_seed=123
 #     )
 #     train_loader_b, test_loader_b = cifar10_dvs_loader.get_cifar10_loaders(
-#         batch_size=2, n_time_bins=4, num_workers=0, split_seed=123
+#         batch_size=2, time_steps=4, num_workers=0, split_seed=123
 #     )
 
 #     assert train_loader_a.dataset.indices == train_loader_b.dataset.indices

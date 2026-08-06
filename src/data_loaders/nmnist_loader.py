@@ -3,13 +3,13 @@ import tonic
 import tonic.transforms as transforms
 
 
-def get_nmnist_loaders(batch_size=64, n_time_bins=10, num_workers=4):
+def get_nmnist_loaders(batch_size=64, time_steps=10, num_workers=4):
     """
     Get NMNIST data loaders.
     """
     sensor_size = tonic.datasets.NMNIST.sensor_size
     frame_transform = transforms.Compose(
-        [transforms.ToFrame(sensor_size=sensor_size, n_time_bins=n_time_bins)]
+        [transforms.ToFrame(sensor_size=sensor_size, n_time_bins=time_steps)]
     )
 
     train_set = tonic.datasets.NMNIST(

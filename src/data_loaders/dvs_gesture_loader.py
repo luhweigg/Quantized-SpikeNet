@@ -10,7 +10,7 @@ def custom_collate_fn(batch):
     return events, targets
 
 
-def get_dvs_gesture_loaders(batch_size=64, n_time_bins=10, num_workers=4):
+def get_dvs_gesture_loaders(batch_size=64, time_steps=10, num_workers=4):
     """
     Get DVS Gesture data loaders with dynamic event-level data augmentation.
     """
@@ -28,12 +28,12 @@ def get_dvs_gesture_loaders(batch_size=64, n_time_bins=10, num_workers=4):
     train_transform = transforms.Compose(
         [
             transforms.DropEvent(p=0.2),
-            transforms.ToFrame(sensor_size=sensor_size, n_time_bins=n_time_bins),
+            transforms.ToFrame(sensor_size=sensor_size, n_time_bins=time_steps),
         ]
     )
 
     test_transform = transforms.Compose(
-        [transforms.ToFrame(sensor_size=sensor_size, n_time_bins=n_time_bins)]
+        [transforms.ToFrame(sensor_size=sensor_size, n_time_bins=time_steps)]
     )
 
     cached_train = tonic.DiskCachedDataset(
