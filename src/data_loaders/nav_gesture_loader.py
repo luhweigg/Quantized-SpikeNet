@@ -1,3 +1,4 @@
+import os
 import torch
 import torch.nn.functional as F
 from torch.utils.data import DataLoader, random_split
@@ -18,6 +19,7 @@ def custom_collate_fn_nav(batch):
     return events, targets
 
 def get_nav_gesture_loaders(batch_size: int, time_steps: int, num_workers: int = 4, split_seed: int = 42):
+    os.makedirs("./data/NavGesture", exist_ok=True)
     dataset = NAVGestureWalk(root="./data/NavGesture", data_type='frame', frames_number=time_steps, split_by='number')
     
     train_size = int(0.8 * len(dataset))
