@@ -16,7 +16,7 @@ class CeoliniGestures(Dataset):
         with open(pkl_path, "rb") as f:
             data = pickle.load(f)
 
-        self.y = data["y"][0]
+        self.y = data["y"]
         self.dvs = data["dvs"]
 
     def __len__(self):
@@ -24,15 +24,17 @@ class CeoliniGestures(Dataset):
 
     def __getitem__(self, idx):
         events = self.dvs[idx]
-        label = int(self.y[idx])
-
+        label = int(
+            self.y[idx][0]
+            if isinstance(self.y[idx], (list, np.ndarray))
+            else self.y[idx]
+        )
         frames = torch.zeros((self.time_steps, 2, 64, 64), dtype=torch.float32)
 
         if events.shape[1] == 0:
             return frames, label
 
         x, y, t, p = events[0, :], events[1, :], events[2, :], events[3, :]
-
         t_min, t_max = t.min(), t.max()
         if t_max > t_min:
             t_norm = ((t - t_min) / (t_max - t_min) * (self.time_steps - 1)).astype(int)
