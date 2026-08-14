@@ -1,9 +1,9 @@
+from .asl_dvs_loader import get_asl_dvs_loaders
 from .cifar10_dvs_loader import get_cifar10_dvs_loaders
 from .dvs_gesture_loader import get_dvs_gesture_loaders
 from .dvs_lip_loader import get_dvs_lip_loaders
-from .emnist_loader import get_emnist_loaders
-from .fmnist_loader import get_fmnist_loaders
-from .kmnist_loader import get_kmnist_loaders
+from .edat24_loader import get_edat24_loaders
+from .nav_gesture_loader import get_nav_gesture_loaders
 from .ncaltech101_loader import get_ncaltech101_loaders
 from .nepic_kitchens_loader import get_nepic_kitchens_loaders
 from .nmnist_loader import get_nmnist_loaders
@@ -12,12 +12,12 @@ from .smnist_loader import get_smnist_loaders
 from .ssc_loader import get_ssc_loaders
 
 __all__ = [
+    "get_asl_dvs_loaders",
     "get_cifar10_dvs_loaders",
     "get_dvs_gesture_loaders",
     "get_dvs_lip_loaders",
-    "get_emnist_loaders",
-    "get_fmnist_loaders",
-    "get_kmnist_loaders",
+    "get_edat24_loaders",
+    "get_nav_gesture_loaders",
     "get_ncaltech101_loaders",
     "get_nepic_kitchens_loaders",
     "get_nmnist_loaders",

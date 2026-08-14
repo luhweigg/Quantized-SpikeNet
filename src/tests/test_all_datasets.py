@@ -12,9 +12,9 @@ DATASETS = [
     # "dvs_lip",
     # "ssc",
     # "smnist",
-    # "fmnist",
-    # "kmnist",
-    # "emnist"
+    "edat24",
+    "nav_gesture",
+    "asl_dvs",
 ]
 
 

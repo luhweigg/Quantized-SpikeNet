@@ -4,17 +4,18 @@ import json
 import time
 
 DATASETS = [
+    "cifar10_dvs",
     "dvs_gesture",
     "dvs_lip",
-    "emnist",
-    "fmnist",
-    "kmnist",
     "ncaltech101",
     "nepic_kitchens",
     "nmnist",
     "shd",
     "smnist",
     "ssc",
+    "asl_dvs",
+    "edat24"
+    "nav_gesture"
 ]
 
 TIME_STEPS = [4, 8, 16, 32]
@@ -26,11 +27,11 @@ TARGET_BATCH_SIZE = 64
 SAFE_PHYSICAL_BATCH = {
     "nmnist": 64,
     "smnist": 64,
-    "fmnist": 64,
-    "kmnist": 64,
-    "emnist": 64,
     "shd": 64,
     "ssc": 64,
+    "asl_dvs": 64,
+    "edat24": 64,
+    "nav_gesture": 64,
     "cifar10_dvs": 32,
     "dvs_gesture": 16,
     "dvs_lip": 16,
