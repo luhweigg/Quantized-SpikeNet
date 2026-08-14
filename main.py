@@ -4,9 +4,9 @@ import os
 from datetime import UTC, datetime
 
 import torch
-import wandb
 from tqdm import tqdm
 
+import wandb
 from src.engine import (
     CSVLogger,
     EarlyStopping,

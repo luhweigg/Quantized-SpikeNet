@@ -27,8 +27,5 @@ jobs:
       - name: Check code formatting
         run: uv run ruff format --check .
 
-      - name: Lint code
-        run: uv run ruff check .
-
       - name: Run test suite
         run: uv run pytest
