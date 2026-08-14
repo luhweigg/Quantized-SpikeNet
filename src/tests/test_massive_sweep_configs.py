@@ -22,6 +22,8 @@ DATASET_SHAPES = {
     "smnist": {"kind": "1d", "channels": 2, "length": 99},
     "ssc": {"kind": "1d", "channels": 1, "length": 700},
     "edat24": {"kind": "2d", "channels": 2, "height": 64, "width": 64},
+    "ceolini_gestures": {"kind": "2d", "channels": 2, "height": 64, "width": 64},
+    "stemnist": {"kind": "2d", "channels": 2, "height": 16, "width": 16},
 }
 
 MLP_INPUT_SIZES = {

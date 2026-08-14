@@ -14,6 +14,8 @@ DATASETS = [
     "smnist",
     "ssc",
     "edat24",
+    "ceolini_gestures",
+    "stemnist",
 ]
 
 TIME_STEPS = [4, 8, 16, 32]
@@ -28,6 +30,8 @@ SAFE_PHYSICAL_BATCH = {
     "shd": 64,
     "ssc": 64,
     "edat24": 64,
+    "ceolini_gestures": 64,
+    "stemnist": 64,
     "cifar10_dvs": 32,
     "dvs_gesture": 16,
     "dvs_lip": 16,

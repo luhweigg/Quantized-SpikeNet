@@ -1376,6 +1376,7 @@ version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
     { name = "aedat" },
+    { name = "h5py" },
     { name = "imageio" },
     { name = "pandas" },
     { name = "pynn" },
@@ -1394,6 +1395,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "aedat", specifier = ">=2.2.0" },
+    { name = "h5py", specifier = ">=3.16.0" },
     { name = "imageio", specifier = ">=2.37.4" },
     { name = "pandas", specifier = "<3.0.0" },
     { name = "pynn", specifier = ">=0.13.0" },

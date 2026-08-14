@@ -13,6 +13,7 @@ from src.models import (
     SpikingResNet34,
 )
 from src.data_loaders import (
+    get_ceolini_gestures_loaders,
     get_cifar10_dvs_loaders,
     get_dvs_gesture_loaders,
     get_dvs_lip_loaders,
@@ -23,6 +24,7 @@ from src.data_loaders import (
     get_shd_loaders,
     get_smnist_loaders,
     get_ssc_loaders,
+    get_stemnist_loaders,
 )
 
 ARCHITECTURES = {
@@ -38,6 +40,7 @@ ARCHITECTURES = {
 }
 
 DATA_LOADERS = {
+    "ceolini_gestures": get_ceolini_gestures_loaders,
     "cifar10_dvs": get_cifar10_dvs_loaders,
     "dvs_gesture": get_dvs_gesture_loaders,
     "dvs_lip": get_dvs_lip_loaders,
@@ -48,6 +51,7 @@ DATA_LOADERS = {
     "shd": get_shd_loaders,
     "smnist": get_smnist_loaders,
     "ssc": get_ssc_loaders,
+    "stemnist": get_stemnist_loaders,
 }
 
 

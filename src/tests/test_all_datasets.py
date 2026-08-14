@@ -13,6 +13,8 @@ DATASETS = [
     # "ssc",
     # "smnist",
     # "edat24",
+    "ceolini_gestures",
+    "stemnist",
 ]
 
 

@@ -1,0 +1,9 @@
+{
+    "default_architecture": "CompactSpikingCNN",
+    "architectures": {
+        "CompactSpikingCNN": {
+            "in_channels": 2,
+            "out_classes": 35
+        }
+    }
+}

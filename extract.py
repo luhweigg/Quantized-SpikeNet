@@ -8,7 +8,10 @@ from typing import List
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from src.engine.builder import DATA_LOADERS
 
-def extract_and_serialize_samples(datasets: List[str], time_steps: int, dt: float, output_dir: str) -> None:
+
+def extract_and_serialize_samples(
+    datasets: List[str], time_steps: int, dt: float, output_dir: str
+) -> None:
     """
     Extrait un echantillon pour chaque dataset specifie, applique un jitter temporel pour eviter la congestion SpiNNaker, et le serialise en JSON.
     """
@@ -20,7 +23,7 @@ def extract_and_serialize_samples(datasets: List[str], time_steps: int, dt: floa
 
         _, test_loader = DATA_LOADERS[dataset_name](1, time_steps)
         events_tensor, targets_tensor = next(iter(test_loader))
-        
+
         sample_events = events_tensor[:, 0, ...]
         target_label = targets_tensor[0].item()
 
@@ -39,12 +42,13 @@ def extract_and_serialize_samples(datasets: List[str], time_steps: int, dt: floa
             "dataset": dataset_name,
             "label": target_label,
             "num_neurons": num_neurons,
-            "spike_times": spike_times
+            "spike_times": spike_times,
         }
 
         output_file = os.path.join(output_dir, f"sample_{dataset_name}.json")
-        with open(output_file, 'w') as f:
+        with open(output_file, "w") as f:
             json.dump(payload, f)
+
 
 if __name__ == "__main__":
     target_datasets = ["nmnist", "cifar10_dvs", "dvs_gesture", "nepic_kitchens"]

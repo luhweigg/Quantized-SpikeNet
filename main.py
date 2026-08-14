@@ -26,6 +26,7 @@ def parse_args():
         type=str,
         default="nmnist",
         choices=[
+            "ceolini_gestures",
             "cifar10_dvs",
             "dvs_gesture",
             "dvs_lip",
@@ -36,6 +37,7 @@ def parse_args():
             "shd",
             "smnist",
             "ssc",
+            "stemnist",
         ],
     )
     parser.add_argument(
