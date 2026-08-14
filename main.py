@@ -26,12 +26,10 @@ def parse_args():
         type=str,
         default="nmnist",
         choices=[
-            "asl_dvs",
             "cifar10_dvs",
             "dvs_gesture",
             "dvs_lip",
             "edat24",
-            "nav_gesture",
             "ncaltech101",
             "nepic_kitchens",
             "nmnist",

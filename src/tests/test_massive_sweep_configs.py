@@ -21,9 +21,7 @@ DATASET_SHAPES = {
     "shd": {"kind": "1d", "channels": 1, "length": 700},
     "smnist": {"kind": "1d", "channels": 2, "length": 99},
     "ssc": {"kind": "1d", "channels": 1, "length": 700},
-    "asl_dvs": {"kind": "2d", "channels": 2, "height": 64, "width": 64},
     "edat24": {"kind": "2d", "channels": 2, "height": 64, "width": 64},
-    "nav_gesture": {"kind": "2d", "channels": 2, "height": 64, "width": 64},
 }
 
 MLP_INPUT_SIZES = {

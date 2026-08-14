@@ -13,9 +13,7 @@ DATASETS = [
     "shd",
     "smnist",
     "ssc",
-    "asl_dvs",
-    "edat24"
-    "nav_gesture"
+    "edat24",
 ]
 
 TIME_STEPS = [4, 8, 16, 32]
@@ -29,9 +27,7 @@ SAFE_PHYSICAL_BATCH = {
     "smnist": 64,
     "shd": 64,
     "ssc": 64,
-    "asl_dvs": 64,
     "edat24": 64,
-    "nav_gesture": 64,
     "cifar10_dvs": 32,
     "dvs_gesture": 16,
     "dvs_lip": 16,

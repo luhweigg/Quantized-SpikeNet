@@ -13,12 +13,10 @@ from src.models import (
     SpikingResNet34,
 )
 from src.data_loaders import (
-    get_asl_dvs_loaders,
     get_cifar10_dvs_loaders,
     get_dvs_gesture_loaders,
     get_dvs_lip_loaders,
     get_edat24_loaders,
-    get_nav_gesture_loaders,
     get_ncaltech101_loaders,
     get_nepic_kitchens_loaders,
     get_nmnist_loaders,
@@ -40,12 +38,10 @@ ARCHITECTURES = {
 }
 
 DATA_LOADERS = {
-    "asl_dvs": get_asl_dvs_loaders,
     "cifar10_dvs": get_cifar10_dvs_loaders,
     "dvs_gesture": get_dvs_gesture_loaders,
     "dvs_lip": get_dvs_lip_loaders,
     "edat24": get_edat24_loaders,
-    "nav_gesture": get_nav_gesture_loaders,
     "ncaltech101": get_ncaltech101_loaders,
     "nepic_kitchens": get_nepic_kitchens_loaders,
     "nmnist": get_nmnist_loaders,
