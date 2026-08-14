@@ -34,7 +34,7 @@ def get_ncaltech101_loaders(
 
     dataset = tonic.datasets.NCALTECH101(save_to="./data", transform=transform)
 
-    classes = sorted(list(set(dataset.targets)))
+    classes = sorted(set(dataset.targets))
     class_to_idx = {cls_name: i for i, cls_name in enumerate(classes)}
 
     dataset.target_transform = lambda target: class_to_idx[str(target)]

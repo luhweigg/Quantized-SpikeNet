@@ -39,7 +39,7 @@ class STEMNIST(Dataset):
         frames = torch.zeros((self.time_steps, 2, 16, 16), dtype=torch.float32)
 
         with h5py.File(file_path, "r") as f:
-            if "timestamp" not in f.keys():
+            if "timestamp" not in f:
                 return frames, label
 
             t = f["timestamp"][:]

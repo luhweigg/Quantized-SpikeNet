@@ -1,7 +1,7 @@
 import argparse
 import json
 import os
-from datetime import datetime
+from datetime import UTC, datetime
 
 import torch
 from tqdm import tqdm
@@ -153,7 +153,7 @@ def main():
             else os.path.dirname(args.resume)
         )
     else:
-        current_time = datetime.now().strftime("%Y%m%d_%H%M%S")
+        current_time = datetime.now(UTC).strftime("%Y%m%d_%H%M%S")
         folder_name = f"run_{run_name}_{current_time}"
 
         args.save_dir = os.path.join(args.save_dir, args.dataset, folder_name)

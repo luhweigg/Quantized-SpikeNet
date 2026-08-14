@@ -92,7 +92,7 @@ def test_checkpoint_resume_parity():
     )
 
     weights_C = model_C.state_dict()
-    for key in weights_A:
-        assert torch.equal(weights_A[key], weights_C[key]), (
+    for key, value in weights_A.items():
+        assert torch.equal(value, weights_C[key]), (
             f"Désynchro des poids sur la couche : {key}"
         )

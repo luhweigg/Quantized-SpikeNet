@@ -1,0 +1,39 @@
+diff --git a/src/data_loaders/ncaltech101_loader.py b/src/data_loaders/ncaltech101_loader.py
+index 53973ee..b559691 100644
+--- a/src/data_loaders/ncaltech101_loader.py
++++ b/src/data_loaders/ncaltech101_loader.py
+@@ -34,7 +34,7 @@ def get_ncaltech101_loaders(
+ 
+     dataset = tonic.datasets.NCALTECH101(save_to="./data", transform=transform)
+ 
+-    classes = sorted(list(set(dataset.targets)))
++    classes = sorted(set(dataset.targets))
+     class_to_idx = {cls_name: i for i, cls_name in enumerate(classes)}
+ 
+     dataset.target_transform = lambda target: class_to_idx[str(target)]
+diff --git a/src/data_loaders/stemnist_loader.py b/src/data_loaders/stemnist_loader.py
+index 06f52ce..50a4766 100644
+--- a/src/data_loaders/stemnist_loader.py
++++ b/src/data_loaders/stemnist_loader.py
+@@ -39,7 +39,7 @@ class STEMNIST(Dataset):
+         frames = torch.zeros((self.time_steps, 2, 16, 16), dtype=torch.float32)
+ 
+         with h5py.File(file_path, "r") as f:
+-            if "timestamp" not in f.keys():
++            if "timestamp" not in f:
+                 return frames, label
+ 
+             t = f["timestamp"][:]
+diff --git a/src/tests/test_quantization.py b/src/tests/test_quantization.py
+index d6210dd..b1d3d82 100644
+--- a/src/tests/test_quantization.py
++++ b/src/tests/test_quantization.py
+@@ -13,7 +13,7 @@ def test_quantization_bounds_and_types():
+ 
+     quantized_state = quantize_weights(model, num_bits=8)
+ 
+-    for name, param in quantized_state.items():
++    for param in quantized_state.values():
+         assert param.dtype == torch.int8
+         assert param.min() >= -128
+         assert param.max() <= 127

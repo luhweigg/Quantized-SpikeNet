@@ -3,7 +3,7 @@ import subprocess
 import sys
 import threading
 import time
-from datetime import datetime
+from datetime import UTC, datetime
 
 import torch
 
@@ -49,7 +49,7 @@ class GPUPowerMonitor:
                 )
                 power_val = float(result.stdout.strip().split("\n")[0])
                 self.measurements.append(power_val)
-            except Exception:
+            except (ValueError, IndexError):
                 pass
             time.sleep(0.1)
 
@@ -217,7 +217,7 @@ def run_real_inference_pytorch():
 
     print(report_text)
 
-    timestamp = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
+    timestamp = datetime.now(UTC).strftime("%Y-%m-%d-%H-%M-%S")
     report_dir = os.path.join("reports", DATASET, timestamp)
     os.makedirs(report_dir, exist_ok=True)
 

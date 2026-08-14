@@ -67,7 +67,7 @@ def download_and_extract(dataset):
             os.rename(temp_file, final_path)
             print(f"[*] Fichier sauvegardé sous : {final_path}")
 
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         print(f"\n[!] Erreur lors du traitement de {dataset['name']} : {e}")
         if os.path.exists(temp_file):
             os.remove(temp_file)

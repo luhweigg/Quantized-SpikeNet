@@ -13,7 +13,7 @@ def test_quantization_bounds_and_types():
 
     quantized_state = quantize_weights(model, num_bits=8)
 
-    for name, param in quantized_state.items():
+    for param in quantized_state.values():
         assert param.dtype == torch.int8
         assert param.min() >= -128
         assert param.max() <= 127
