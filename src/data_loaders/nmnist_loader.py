@@ -1,6 +1,6 @@
-import torch
 import tonic
-import tonic.transforms as transforms
+import torch
+from tonic import transforms
 
 
 def get_nmnist_loaders(batch_size=64, time_steps=10, num_workers=4):

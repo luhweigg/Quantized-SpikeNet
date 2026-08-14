@@ -2,7 +2,7 @@ import torch
 
 # from src.data_loaders import cifar10_dvs_loader
 from src.engine import quantize_weights
-from src.models import SpikingMLP, CompactSpikingCNN, SpikingVGG5
+from src.models import CompactSpikingCNN, SpikingMLP, SpikingVGG5
 
 
 def test_deepconv_snn_accepts_downsampled_cifar10_shape():

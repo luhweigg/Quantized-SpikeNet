@@ -1,6 +1,6 @@
-import torch
 import tonic
-import tonic.transforms as transforms
+import torch
+from tonic import transforms
 from torch.utils.data import DataLoader, random_split
 
 

@@ -1,21 +1,23 @@
-import os
 import argparse
 import json
-import torch
-import wandb
+import os
 from datetime import datetime
+
+import torch
 from tqdm import tqdm
+
+import wandb
 from src.engine import (
-    build_components,
-    train_one_epoch,
-    evaluate,
-    quantize_weights,
-    save_checkpoint,
-    load_checkpoint,
-    capture_rng_state,
-    count_neurons,
     CSVLogger,
     EarlyStopping,
+    build_components,
+    capture_rng_state,
+    count_neurons,
+    evaluate,
+    load_checkpoint,
+    quantize_weights,
+    save_checkpoint,
+    train_one_epoch,
 )
 
 

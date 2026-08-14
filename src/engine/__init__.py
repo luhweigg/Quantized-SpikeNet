@@ -1,26 +1,26 @@
 from .builder import build_components
-from .trainer import train_one_epoch, evaluate
 from .quantization import quantize_weights
+from .trainer import evaluate, train_one_epoch
 from .utils import (
     CSVLogger,
     EarlyStopping,
     capture_rng_state,
+    count_neurons,
+    load_checkpoint,
     restore_rng_state,
     save_checkpoint,
-    load_checkpoint,
-    count_neurons,
 )
 
 __all__ = [
-    "build_components",
-    "train_one_epoch",
-    "evaluate",
-    "quantize_weights",
     "CSVLogger",
     "EarlyStopping",
+    "build_components",
     "capture_rng_state",
+    "count_neurons",
+    "evaluate",
+    "load_checkpoint",
+    "quantize_weights",
     "restore_rng_state",
     "save_checkpoint",
-    "load_checkpoint",
-    "count_neurons",
+    "train_one_epoch",
 ]

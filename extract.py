@@ -1,16 +1,14 @@
 import json
 import os
-import sys
-import torch
 import random
-from typing import List
+import sys
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from src.engine.builder import DATA_LOADERS
 
 
 def extract_and_serialize_samples(
-    datasets: List[str], time_steps: int, dt: float, output_dir: str
+    datasets: list[str], time_steps: int, dt: float, output_dir: str
 ) -> None:
     """
     Extrait un echantillon pour chaque dataset specifie, applique un jitter temporel pour eviter la congestion SpiNNaker, et le serialise en JSON.

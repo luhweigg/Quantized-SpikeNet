@@ -7,7 +7,6 @@ import torch
 from src.engine import evaluate, train_one_epoch
 from src.engine.builder import ARCHITECTURES
 
-
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 CONFIG_DIR = PROJECT_ROOT / "configs"
 

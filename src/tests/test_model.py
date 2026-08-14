@@ -1,7 +1,8 @@
 import torch
-import torch.nn as nn
-from src.models import SpikingMLP, SpikingVGG5
+from torch import nn
+
 from src.engine import train_one_epoch
+from src.models import SpikingMLP, SpikingVGG5
 
 
 def test_overfit_single_batch_NMNIST():

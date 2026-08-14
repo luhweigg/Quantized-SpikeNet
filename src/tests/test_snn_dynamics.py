@@ -1,5 +1,6 @@
 import torch
 from spikingjelly.activation_based import functional, neuron
+
 from src.models import SpikingMLP
 
 

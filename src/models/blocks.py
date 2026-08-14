@@ -1,6 +1,7 @@
 import torch
-import torch.nn as nn
-from spikingjelly.activation_based import layer, neuron, functional
+from spikingjelly.activation_based import functional, layer, neuron
+from torch import nn
+
 from src.domain.ports import ISNNModel
 
 

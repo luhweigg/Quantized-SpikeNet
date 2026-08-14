@@ -1,5 +1,6 @@
-import torch.nn as nn
-from spikingjelly.activation_based import layer, surrogate, functional
+from spikingjelly.activation_based import functional, layer, surrogate
+from torch import nn
+
 from .blocks import BaseSNNModel, SpikingResNetStage, SpikingResNetStem
 
 

@@ -1,13 +1,15 @@
-import torch
-import time
 import os
+import subprocess
 import sys
 import threading
-import subprocess
+import time
 from datetime import datetime
+
+import torch
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from spikingjelly.activation_based.base import MemoryModule
+
 from src.models import SpikingMLP, SpikingVGG4, SpikingVGG5, SpikingVGG8
 
 DATASET = "nepic_kitchens"  # Choices : "nmnist", "cifar10_dvs", "dvs_gesture", "nepic_kitchens"

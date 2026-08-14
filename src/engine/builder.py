@@ -1,17 +1,7 @@
 import torch
-import torch.nn as nn
+from torch import nn
 from torch.optim.lr_scheduler import CosineAnnealingLR
-from src.models import (
-    CompactSpikingCNN,
-    SpikingMLP,
-    Spiking1DCNN,
-    SpikingVGG3,
-    SpikingVGG4,
-    SpikingVGG5,
-    SpikingVGG8,
-    SpikingResNet18,
-    SpikingResNet34,
-)
+
 from src.data_loaders import (
     get_ceolini_gestures_loaders,
     get_cifar10_dvs_loaders,
@@ -25,6 +15,17 @@ from src.data_loaders import (
     get_smnist_loaders,
     get_ssc_loaders,
     get_stemnist_loaders,
+)
+from src.models import (
+    CompactSpikingCNN,
+    Spiking1DCNN,
+    SpikingMLP,
+    SpikingResNet18,
+    SpikingResNet34,
+    SpikingVGG3,
+    SpikingVGG4,
+    SpikingVGG5,
+    SpikingVGG8,
 )
 
 ARCHITECTURES = {

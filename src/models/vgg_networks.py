@@ -1,6 +1,7 @@
-import torch.nn as nn
-from spikingjelly.activation_based import layer, neuron, surrogate, functional
-from .blocks import SpikingConvBlock, BaseSNNModel
+from spikingjelly.activation_based import functional, layer, neuron, surrogate
+from torch import nn
+
+from .blocks import BaseSNNModel, SpikingConvBlock
 
 
 class SpikingVGG3(BaseSNNModel):

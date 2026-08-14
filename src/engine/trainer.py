@@ -1,6 +1,6 @@
 import torch
-from tqdm import tqdm
 from spikingjelly.activation_based.base import MemoryModule
+from tqdm import tqdm
 
 
 def train_one_epoch(

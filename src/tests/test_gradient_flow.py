@@ -1,6 +1,7 @@
 import torch
-import torch.nn as nn
 from spikingjelly.activation_based import functional
+from torch import nn
+
 from src.models import SpikingMLP, SpikingVGG5
 
 

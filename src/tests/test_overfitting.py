@@ -1,5 +1,6 @@
 import pytest
 import torch
+
 from src.models import SpikingMLP, SpikingVGG5
 
 

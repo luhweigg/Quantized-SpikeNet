@@ -1,7 +1,7 @@
 import os
+import sys
 import urllib.request
 import zipfile
-import sys
 
 DATASETS = [
     {
@@ -51,12 +51,12 @@ def download_and_extract(dataset):
     temp_file = os.path.join(dataset["output_dir"], "temp_download.tmp")
 
     try:
-        print(f"[*] Téléchargement depuis Zenodo...")
+        print("[*] Téléchargement depuis Zenodo...")
         urllib.request.urlretrieve(dataset["url"], temp_file, reporthook=show_progress)
         print("\n[*] Téléchargement terminé.")
 
         if dataset["type"] == "zip":
-            print(f"[*] Extraction de l'archive...")
+            print("[*] Extraction de l'archive...")
             with zipfile.ZipFile(temp_file, "r") as zip_ref:
                 zip_ref.extractall(dataset["output_dir"])
             os.remove(temp_file)

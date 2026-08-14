@@ -1,11 +1,12 @@
 import os
 import tempfile
+
 import torch
-import torch.nn as nn
+from torch import nn
 from torch.optim.lr_scheduler import CosineAnnealingLR
+
+from src.engine import save_checkpoint, train_one_epoch
 from src.models import SpikingMLP
-from src.engine import train_one_epoch
-from src.engine import save_checkpoint
 
 
 def set_seed(seed=67):
@@ -91,7 +92,7 @@ def test_checkpoint_resume_parity():
     )
 
     weights_C = model_C.state_dict()
-    for key in weights_A.keys():
+    for key in weights_A:
         assert torch.equal(weights_A[key], weights_C[key]), (
             f"Désynchro des poids sur la couche : {key}"
         )

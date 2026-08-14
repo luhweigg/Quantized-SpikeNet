@@ -1,6 +1,7 @@
 import torch
-from src.models import SpikingMLP
+
 from src.engine import quantize_weights
+from src.models import SpikingMLP
 
 
 def test_quantization_bounds_and_types():
