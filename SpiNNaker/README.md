@@ -52,7 +52,9 @@ Open the script you want to run (`spinnaker_stress_test.py` or `spinnaker_infere
 At the very top of the script, change the `DATASET` variable to the network you want to deploy:
 
 ```python
-DATASET = "cifar10_dvs"  # Options: "nmnist", "cifar10_dvs", "dvs_gesture", "nepic_kitchens"
+DATASET = (
+    "cifar10_dvs"  # Options: "nmnist", "cifar10_dvs", "dvs_gesture", "nepic_kitchens"
+)
 ```
 
 Run the script from your portal's terminal or Jupyter interface.
