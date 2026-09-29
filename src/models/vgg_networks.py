@@ -16,9 +16,10 @@ class SpikingVGG3(BaseSNNModel):
         dropout: float = 0.5,
         init_stride: int = 1,
         v_threshold: float = 1.0,
+        alpha: float = 1.5,
     ):
         super().__init__()
-        sg = surrogate.ATan(alpha=1.5)
+        sg = surrogate.ATan(alpha=alpha)
         self.network = nn.Sequential(
             SpikingConvBlock(
                 in_channels,
@@ -58,9 +59,10 @@ class SpikingVGG4(BaseSNNModel):
         dropout: float = 0.5,
         init_stride: int = 1,
         v_threshold: float = 1.0,
+        alpha: float = 1.5,
     ):
         super().__init__()
-        sg = surrogate.ATan(alpha=1.5)
+        sg = surrogate.ATan(alpha=alpha)
         self.network = nn.Sequential(
             SpikingConvBlock(
                 in_channels,
@@ -107,9 +109,10 @@ class SpikingVGG5(BaseSNNModel):
         dropout: float = 0.5,
         init_stride: int = 1,
         v_threshold: float = 1.0,
+        alpha: float = 1.5,
     ):
         super().__init__()
-        sg = surrogate.ATan(alpha=1.5)
+        sg = surrogate.ATan(alpha=alpha)
         self.network = nn.Sequential(
             SpikingConvBlock(
                 in_channels,
@@ -163,9 +166,10 @@ class SpikingVGG8(BaseSNNModel):
         dropout: float = 0.5,
         init_stride: int = 1,
         v_threshold: float = 0.5,
+        alpha: float = 2.0,
     ):
         super().__init__()
-        sg = surrogate.ATan(alpha=2.0)
+        sg = surrogate.ATan(alpha=alpha)
 
         self.network = nn.Sequential(
             SpikingConvBlock(

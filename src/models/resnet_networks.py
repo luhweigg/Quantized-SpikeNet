@@ -16,9 +16,10 @@ class SpikingResNet18(BaseSNNModel):
         dropout: float = 0.5,
         init_stride: int = 2,
         v_threshold: float = 1.0,
+        alpha: float = 2.0,
     ):
         super().__init__()
-        sg = surrogate.ATan(alpha=2.0)
+        sg = surrogate.ATan(alpha=alpha)
 
         self.network = nn.Sequential(
             SpikingResNetStem(in_channels, init_stride, sg, v_threshold),
@@ -54,9 +55,10 @@ class SpikingResNet34(BaseSNNModel):
         dropout: float = 0.5,
         init_stride: int = 4,
         v_threshold: float = 1.0,
+        alpha: float = 2.0,
     ):
         super().__init__()
-        sg = surrogate.ATan(alpha=2.0)
+        sg = surrogate.ATan(alpha=alpha)
 
         self.network = nn.Sequential(
             SpikingResNetStem(in_channels, init_stride, sg, v_threshold),

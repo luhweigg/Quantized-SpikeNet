@@ -22,14 +22,14 @@ The primary goal of this project is to train robust SNNs and export **Fake-Quant
 
 The framework provides specific architectures tuned for event-based vision tasks:
 
-| Dataset | Default Architecture | Task | Classes |
-| :--- | :--- | :--- | :---: |
-| **N-MNIST** | `SpikingMLP` | Neuromorphic Digit Recognition | 10 |
-| **CIFAR10_DVS** | `CompactSpikingCNN` / `SpikingVGG4` | Complex Object Classification | 10 |
-| **DVS Gesture** | `SpikingVGG5` | Dynamic Hand Gesture Recognition | 11 |
-| **N-EPIC Kitchens** | `SpikingVGG8` / `SpikingResNet18` | Ego-centric Action Recognition | Multi |
+| Dataset             | Default Architecture                | Task                             | Classes |
+| :------------------ | :---------------------------------- | :------------------------------- | :-----: |
+| **N-MNIST**         | `SpikingMLP`                        | Neuromorphic Digit Recognition   |   10    |
+| **CIFAR10_DVS**     | `CompactSpikingCNN` / `SpikingVGG4` | Complex Object Classification    |   10    |
+| **DVS Gesture**     | `SpikingVGG5`                       | Dynamic Hand Gesture Recognition |   11    |
+| **N-EPIC Kitchens** | `SpikingVGG8` / `SpikingResNet18`   | Ego-centric Action Recognition   |  Multi  |
 
-*Other available architectures: `SpikingVGG3`.*
+_Other available architectures: `SpikingVGG3`._
 
 ---
 
@@ -38,12 +38,14 @@ The framework provides specific architectures tuned for event-based vision tasks
 This project uses [`uv`](https://github.com/astral-sh/uv) for blazing-fast dependency management. Ensure you have **Python 3.12+** installed on your machine.
 
 **1. Clone the repository:**
+
 ```bash
 git clone git@github.com:luhweigg/Quantized-SpikeNet.git
 cd Quantized-SpikeNet
 ```
 
 **2. Install dependencies & setup virtual environment:**
+
 ```bash
 uv sync
 ```
@@ -59,7 +61,7 @@ The main entry point is `main.py`. The script automatically handles data caching
 Launch a standard training session. The framework will automatically create a timestamped folder for your run.
 
 ```bash
-uv run python main.py --dataset dvs_gesture --architecture SpikingVGG5 --epochs 50 --batch_size 16 --Time 20 --use_wandb
+uv run python main.py --dataset dvs_gesture --architecture SpikingVGG5 --epochs 50 --batch_size 16 --time 20 --use_wandb
 ```
 
 ### Resume an Interrupted Run
@@ -72,16 +74,16 @@ uv run python main.py --dataset dvs_gesture --resume saved_models/dvs_gesture/ru
 
 ### 🎛️ Available Arguments
 
-| Argument | Type | Default | Description |
-| --- | --- | --- | --- |
-| `--dataset` | `str` | `nmnist` | Target dataset (`nmnist`, `cifar10_dvs`, `dvs_gesture`, `nepic_kitchens`) |
-| `--architecture` | `str` | `None` | Specific model to use (e.g., `SpikingVGG8`, `SpikingResNet18`) |
-| `--epochs` | `int` | `20` | Maximum number of training epochs |
-| `--batch_size` | `int` | `64` | Number of samples per batch |
-| `--lr` | `float` | `1e-3` | Initial learning rate |
-| `--Time` | `int` | `16` | Number of time bins for the event-to-frame transform |
-| `--resume` | `str` | `None` | Path to a run directory to resume training |
-| `--use_wandb` | `flag` | `False` | Enable Weights & Biases logging |
+| Argument         | Type    | Default  | Description                                                               |
+| ---------------- | ------- | -------- | ------------------------------------------------------------------------- |
+| `--dataset`      | `str`   | `nmnist` | Target dataset (`nmnist`, `cifar10_dvs`, `dvs_gesture`, `nepic_kitchens`) |
+| `--architecture` | `str`   | `None`   | Specific model to use (e.g., `SpikingVGG8`, `SpikingResNet18`)            |
+| `--epochs`       | `int`   | `20`     | Maximum number of training epochs                                         |
+| `--batch_size`   | `int`   | `64`     | Number of samples per batch                                               |
+| `--lr`           | `float` | `1e-3`   | Initial learning rate                                                     |
+| `--time`         | `int`   | `16`     | Number of time bins for the event-to-frame transform                      |
+| `--resume`       | `str`   | `None`   | Path to a run directory to resume training                                |
+| `--use_wandb`    | `flag`  | `False`  | Enable Weights & Biases logging                                           |
 
 ---
 
@@ -94,7 +96,7 @@ saved_models/
 └── dvs_gesture/
     └── run_20231027_143000/
         ├── checkpoint_latest.pth           # Full state for easy resumption
-        ├── model_best.pth                  # Best performing model 
+        ├── model_best.pth                  # Best performing model
         ├── dvs_gesture_base.pth            # Final floating-point weights
         ├── dvs_gesture_quantized.pth       # INT8 weights ready for FPGA
         └── training_log_SpikingVGG5.csv    # Complete epoch-by-epoch metrics

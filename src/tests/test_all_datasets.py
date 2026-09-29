@@ -42,7 +42,7 @@ def test_datasets():
             "1",
             "--batch_size",
             "128",
-            "--Time",
+            "--time",
             "2",
         ]
 

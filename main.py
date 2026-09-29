@@ -4,9 +4,9 @@ import os
 from datetime import UTC, datetime
 
 import torch
+import wandb
 from tqdm import tqdm
 
-import wandb
 from src.engine import (
     CSVLogger,
     EarlyStopping,
@@ -58,12 +58,13 @@ def parse_args():
             "SpikingResNet34",
         ],
     )
+    parser.add_argument("--time", type=int, default=16)
+    parser.add_argument("--v_threshold", type=float, default=None)
+    parser.add_argument("--alpha", type=float, default=None)
     parser.add_argument("--epochs", type=int, default=20)
     parser.add_argument("--batch_size", type=int, default=64)
     parser.add_argument("--lr", type=float, default=1e-3)
     parser.add_argument("--accumulation_steps", type=int, default=1)
-    parser.add_argument("--Time", type=int, default=16)
-    parser.add_argument("--v_threshold", type=float, default=1.0)
     parser.add_argument("--save_dir", type=str, default="./saved_models")
     parser.add_argument("--resume", type=str, default=None)
     parser.add_argument("--use_wandb", action="store_true")
@@ -74,26 +75,28 @@ def parse_args():
 def main():
     args = parse_args()
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    v_threshold = getattr(args, "v_threshold", 1.0)
-    accumulation_steps = getattr(args, "accumulation_steps", 1)
 
     config_path = os.path.join("configs", f"{args.dataset}.json")
     with open(config_path, "r") as f:
         model_config = json.load(f)
 
-    selected_arch = (
-        args.architecture if args.architecture else model_config["default_architecture"]
-    )
+    selected_arch = args.architecture or model_config["default_architecture"]
+
     arch_params = model_config["architectures"][selected_arch].copy()
-    arch_params["v_threshold"] = v_threshold
+    if args.v_threshold is not None:
+        arch_params["v_threshold"] = args.v_threshold
+    if args.alpha is not None:
+        arch_params["alpha"] = args.alpha
 
     print(
         f"Device: {device} | Dataset: {args.dataset} | Arch: {selected_arch} | "
         f"Epochs: {args.epochs} | Batch: {args.batch_size} | LR: {args.lr} | "
-        f"Time: {args.Time} | V_th: {v_threshold}"
+        f"time: {args.time} | V_th: {arch_params.get('v_threshold', 'default')} | Alpha: {arch_params.get('alpha', 'default')}"
     )
 
-    run_name = f"{selected_arch}_T{args.Time}_Vth{v_threshold}"
+    run_name = (
+        f"{selected_arch}_T{args.time}_Vth{arch_params.get('v_threshold', 'default')}"
+    )
 
     if args.use_wandb:
         wandb.init(
@@ -131,7 +134,7 @@ def main():
         selected_arch,
         arch_params,
         args.batch_size,
-        args.Time,
+        args.time,
         args.lr,
         args.epochs,
         device,

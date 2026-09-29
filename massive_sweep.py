@@ -83,7 +83,7 @@ def main():
             dataset,
             "--architecture",
             arch,
-            "--Time",
+            "--time",
             str(t),
             "--v_threshold",
             str(v_th),
