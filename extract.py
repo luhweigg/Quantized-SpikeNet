@@ -1,53 +1,72 @@
-import json
 import os
-import random
-import sys
-
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+import json
+import torch
 from src.engine.builder import DATA_LOADERS
 
+NUM_SAMPLES = 30         
+TIME_STEPS_LIST = [4, 8, 16, 32]
+TIME_STEP_MS = 1.0       
 
-def extract_and_serialize_samples(
-    datasets: list[str], time_steps: int, dt: float, output_dir: str
-) -> None:
-    """
-    Extrait un echantillon pour chaque dataset specifie, applique un jitter temporel pour eviter la congestion SpiNNaker, et le serialise en JSON.
-    """
-    os.makedirs(output_dir, exist_ok=True)
+OUTPUT_DIR = "./spinnaker_data"
 
-    for dataset_name in datasets:
-        if dataset_name not in DATA_LOADERS:
-            continue
+def extract_and_save():
+    os.makedirs(OUTPUT_DIR, exist_ok=True)
 
-        _, test_loader = DATA_LOADERS[dataset_name](1, time_steps)
-        events_tensor, targets_tensor = next(iter(test_loader))
+    for dataset in DATA_LOADERS.keys():
+        print(f"\n{'='*50}")
+        print(f"EXTRACTION POUR : {dataset.upper()}")
+        print(f"{'='*50}")
 
-        sample_events = events_tensor[:, 0, ...]
-        target_label = targets_tensor[0].item()
+        for t in TIME_STEPS_LIST:
+            try:
+                _, test_loader = DATA_LOADERS[dataset](
+                    batch_size=NUM_SAMPLES, 
+                    time_steps=t
+                )
+            except Exception as e:
+                print(f"[!] Impossible de charger {dataset} à T={t} : {e}")
+                continue
 
-        flattened_events = sample_events.view(time_steps, -1)
-        num_neurons = flattened_events.shape[1]
+            try:
+                x_batch, y_batch = next(iter(test_loader))
+            except Exception as e:
+                print(f"[!] Erreur de lecture pour {dataset} à T={t} : {e}")
+                continue
 
-        spike_times = [[] for _ in range(num_neurons)]
+            T = x_batch.shape[0]
+            B = x_batch.shape[1]
+            spatial_shape = list(x_batch.shape[2:]) 
+            input_neurons_count = x_batch[0, 0].numel()
 
-        for t in range(time_steps):
-            active_indices = flattened_events[t].nonzero(as_tuple=True)[0]
-            for idx in active_indices:
-                jitter = random.uniform(0, dt * 0.9)
-                spike_times[idx.item()].append(float(t * dt) + jitter)
+            dataset_dir = os.path.join(OUTPUT_DIR, dataset, f"T_{t}")
+            os.makedirs(dataset_dir, exist_ok=True)
 
-        payload = {
-            "dataset": dataset_name,
-            "label": target_label,
-            "num_neurons": num_neurons,
-            "spike_times": spike_times,
-        }
+            meta_info = {
+                "time_steps": T,
+                "spatial_shape": spatial_shape,
+                "input_neurons": input_neurons_count,
+                "time_step_ms": TIME_STEP_MS
+            }
+            with open(os.path.join(dataset_dir, "metadata.json"), "w", encoding="utf-8") as f:
+                json.dump(meta_info, f, indent=4)
 
-        output_file = os.path.join(output_dir, f"sample_{dataset_name}.json")
-        with open(output_file, "w") as f:
-            json.dump(payload, f)
+            for i in range(min(B, NUM_SAMPLES)):
+                spike_times = [[] for _ in range(input_neurons_count)]
+                label = int(y_batch[i].item())
 
+                for current_t in range(T):
+                    frame = x_batch[current_t, i].flatten()
+                    spiking_neurons = torch.nonzero(frame > 0).squeeze(-1)
+
+                    for neuron_idx in spiking_neurons:
+                        physical_time = float(current_t * TIME_STEP_MS)
+                        spike_times[neuron_idx.item()].append(physical_time)
+
+                file_path = os.path.join(dataset_dir, f"sample_{i:02d}.json")
+                with open(file_path, "w", encoding="utf-8") as f:
+                    json.dump({"label": label, "spike_times": spike_times}, f)
+
+            print(f"{dataset.upper()} | T={t} : {min(B, NUM_SAMPLES)} JSON générés ({spatial_shape}).")
 
 if __name__ == "__main__":
-    target_datasets = ["nmnist", "cifar10_dvs", "dvs_gesture", "nepic_kitchens"]
-    extract_and_serialize_samples(target_datasets, 20, 1.0, "networks")
+    extract_and_save()
