@@ -4,6 +4,12 @@
         "CompactSpikingCNN": {
             "in_channels": 2,
             "out_classes": 35
+        },
+        "SpikingVGG4": {
+            "in_channels": 2,
+            "out_classes": 35,
+            "dropout": 0.5,
+            "init_stride": 1
         }
     }
 }
