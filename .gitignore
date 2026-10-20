@@ -180,5 +180,6 @@ wandb
 gif
 reports
 networks
+spinnaker_data
 
 # End of https://www.toptal.com/developers/gitignore/api/python
