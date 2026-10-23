@@ -181,5 +181,6 @@ gif
 reports
 networks
 spinnaker_data
+spinnaker_models
 
 # End of https://www.toptal.com/developers/gitignore/api/python
