@@ -64,8 +64,13 @@ def main():
     for i, (dataset, arch, t, v_th) in enumerate(experiments, 1):
         physical_batch = SAFE_PHYSICAL_BATCH[dataset]
 
-        if arch in ["SpikingVGG8", "SpikingResNet18", "SpikingResNet34"] and t >= 16:
-            physical_batch = max(2, physical_batch // 2)
+        if arch in ["SpikingVGG4", "SpikingVGG5", "SpikingVGG8", "SpikingResNet18", "SpikingResNet34"]:
+            if t == 16:
+                physical_batch = max(2, physical_batch // 2)
+            elif t >= 32:
+                physical_batch = max(2, physical_batch // 4)
+
+        accum_steps = max(1, TARGET_BATCH_SIZE // physical_batch)
 
         accum_steps = max(1, TARGET_BATCH_SIZE // physical_batch)
 
