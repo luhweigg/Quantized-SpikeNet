@@ -182,5 +182,6 @@ reports
 networks
 spinnaker_data
 spinnaker_models
+spinnaker_plan.json
 
 # End of https://www.toptal.com/developers/gitignore/api/python
