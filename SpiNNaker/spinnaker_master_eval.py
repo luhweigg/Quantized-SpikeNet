@@ -11,7 +11,7 @@ import pyNN.spiNNaker as sim
 # ==========================================
 # CONFIGURATION DU BENCHMARK SPINNAKER
 # ==========================================
-TEST_PLAN_PATH = "spinnaker_test_plan.json"
+PLAN_PATH = "spinnaker_plan.json"
 RESULTS_DIR = "results_spinnaker"
 SUMMARY_CSV = os.path.join(RESULTS_DIR, "summary_benchmark.csv")
 PREDICTIONS_DIR = os.path.join(RESULTS_DIR, "predictions")
@@ -330,10 +330,10 @@ def main():
     args = parser.parse_args()
 
     init_directories()
-    if not os.path.exists(TEST_PLAN_PATH):
-        raise FileNotFoundError(f"Plan introuvable : {TEST_PLAN_PATH}. Lance d'abord prepare_spinnaker_suite.py")
+    if not os.path.exists(PLAN_PATH):
+        raise FileNotFoundError(f"Plan introuvable : {PLAN_PATH}. Lance d'abord prepare_spinnaker_suite.py")
 
-    with open(TEST_PLAN_PATH, "r", encoding="utf-8") as f:
+    with open(PLAN_PATH, "r", encoding="utf-8") as f:
         test_plan = json.load(f)
 
     completed_runs = get_completed_runs()
