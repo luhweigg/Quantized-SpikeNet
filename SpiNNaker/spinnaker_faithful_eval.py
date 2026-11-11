@@ -40,10 +40,11 @@ SUMMARY_COLUMNS = [
     "error_msg",
     "accuracy_pytorch_pct",
     "accuracy_emulated_pct",
+    "accuracy_fixed_point_pct",
 ]
 
 DT = 1.0
-TIME_SCALE_FACTOR = 10
+TIME_SCALE_FACTOR = 10  # voir spinnaker_master_eval.py : ne pas dépasser 200
 TAU_M = 1.0 / math.log(
     2.0
 )  # exp(-DT / TAU_M) = 1/2, comme le LIF tau=2 de SpikingJelly
@@ -52,6 +53,7 @@ POOL_THRESHOLD = 0.5  # un neurone « OU » décharge dès qu'il reçoit un spik
 READOUT_THRESHOLD = 30000.0
 INPUT_NEURONS_PER_CORE = 256
 NEURONS_PER_CORE = 128
+WEIGHT_MARGIN = 1.25  # marge sur la somme de poids maximale observée en émulation
 
 
 class Unsupported(Exception):
@@ -62,9 +64,7 @@ class TooLarge(Exception):
     """Le réseau déplié ne tient pas dans le budget de la carte."""
 
 
-# ==========================================
-# CONVERSION DU MODÈLE EN POPULATIONS + SYNAPSES
-# ==========================================
+
 def leaf_modules(module):
     for child in module.children():
         if isinstance(child, nn.Sequential):
@@ -284,44 +284,84 @@ def network_size(spec):
     return neurons, synapses, cores
 
 
-# ==========================================
-# ÉMULATION LOGICIELLE DU RÉSEAU DÉPLOYÉ
-# ==========================================
-def emulate(spec, x):
+
+def ring_buffer_shift(max_summed_weight):
+    """
+    Décalage du « ring buffer » de sPyNNaker pour une somme de poids maximale donnée.
+    La carte stocke chaque poids sur 16 bits avec une résolution de 2^(shift - 15) et
+    sature au-delà de 2^(shift + 1) : trop petit, les entrées saturent ; trop grand, les
+    petits poids sont arrondis à zéro.
+    """
+    if max_summed_weight <= 0:
+        return 0
+    return max(0, math.ceil(math.log2(max_summed_weight * WEIGHT_MARGIN)))
+
+
+def emulate(spec, x, shifts=None):
     """
     Rejoue le réseau converti avec la règle de mise à jour de SpiNNaker.
-    x : [T, B, n_entrées] (comptes d'évènements). Retourne les logits [B, classes].
+    x : [T, B, n_entrées] (comptes d'évènements).
+    shifts : {population: (shift excitateur, shift inhibiteur)} pour reproduire aussi la
+    quantification des poids et la saturation de la carte ; None = arithmétique exacte.
+    Retourne les logits [B, classes] et, par population, la plus grande somme de poids
+    excitatrice et inhibitrice reçue par un neurone en un pas de temps.
     """
     time_steps, batch = x.shape[0], x.shape[1]
     spikes = {0: x.reshape(time_steps, batch, -1).double()}
+    peaks = {}
     for proj in spec["projections"]:
-        pop = spec["populations"][proj["post"]]
+        post = proj["post"]
+        pop = spec["populations"][post]
         if pop["kind"] == "Readout":
             continue
         conns = proj["conns"]
-        matrix = torch.sparse_coo_tensor(
-            np.stack([conns[:, 1], conns[:, 0]]).astype(np.int64),
-            conns[:, 2],
-            (pop["size"], spec["populations"][proj["pre"]]["size"]),
-            dtype=torch.float64,
-        ).coalesce()
-        bias = torch.zeros(pop["size"], dtype=torch.float64)
+        bias = np.zeros(pop["size"])
         if pop["bias"] is not None:
-            bias = torch.from_numpy(np.asarray(pop["bias"], dtype=np.float64))
+            bias = np.asarray(pop["bias"], dtype=np.float64)
+
+        currents = []
+        peaks[post] = []
+        for receptor, sign in enumerate((1.0, -1.0)):
+            keep = conns[:, 2] * sign > 0
+            weights = np.abs(conns[keep, 2])
+            offset = np.clip(bias * sign, 0.0, None)
+            limit = None
+            if shifts is not None:
+                resolution = 2.0 ** (shifts[post][receptor] - 15)
+                weights = np.minimum(np.rint(weights / resolution), 65535) * resolution
+                offset = np.minimum(np.rint(offset / resolution), 65535) * resolution
+                limit = 65535 * resolution
+            matrix = torch.sparse_coo_tensor(
+                np.stack([conns[keep, 1], conns[keep, 0]]).astype(np.int64),
+                weights,
+                (pop["size"], spec["populations"][proj["pre"]]["size"]),
+                dtype=torch.float64,
+            ).coalesce()
+            currents.append((matrix, torch.from_numpy(offset), limit))
 
         v = torch.zeros(batch, pop["size"], dtype=torch.float64)
         out = torch.zeros(time_steps, batch, pop["size"], dtype=torch.float64)
+        peak = [0.0, 0.0]
         for t in range(time_steps):
-            current = torch.sparse.mm(matrix, spikes[proj["pre"]][t].T).T + bias
-            v = 0.5 * v + 0.5 * current
+            pre_spikes = spikes[proj["pre"]][t].T
+            total = torch.zeros_like(v)
+            for receptor, (matrix, offset, limit) in enumerate(currents):
+                received = torch.sparse.mm(matrix, pre_spikes).T + offset
+                peak[receptor] = max(peak[receptor], float(received.max()))
+                if limit is not None:
+                    received = received.clamp(max=limit)
+                total += received if receptor == 0 else -received
+            v = 0.5 * v + 0.5 * total
             fired = v >= pop["v_thresh"]
             out[t] = fired.double()
             v = torch.where(fired, torch.zeros_like(v), v)
-        spikes[proj["post"]] = out
+        spikes[post] = out
+        peaks[post] = peak
 
-    return readout_logits(
+    logits = readout_logits(
         spec, spikes[spec["readout"]["pre"]].sum(dim=0).numpy(), time_steps
     )
+    return logits, peaks
 
 
 def readout_logits(spec, spike_counts, time_steps):
@@ -373,7 +413,7 @@ def delta_neuron_model(sim):
     )
 
 
-def deploy(spec, x, time_scale_factor):
+def deploy(spec, x, time_scale_factor, shifts):
     """Exécute le réseau sur la carte ; retourne les spikes comptés par échantillon."""
     import pyNN.spiNNaker as sim
 
@@ -419,11 +459,28 @@ def deploy(spec, x, time_scale_factor):
                 tau_refrac=0.0,
                 i_offset=0.0,
             )
-            pops.append(
-                sim.Population(
+            index = len(pops)
+            options = {}
+            if index in shifts:
+                options["max_expected_summed_weight"] = [
+                    0.75 * 2.0**shift for shift in shifts[index]
+                ]
+            try:
+                population = sim.Population(
+                    pop["size"],
+                    cell,
+                    label=pop["label"],
+                    initial_values={"v": 0.0},
+                    **options,
+                )
+            except TypeError:
+                print(
+                    "[!] max_expected_summed_weight refusé par cette version de sPyNNaker."
+                )
+                population = sim.Population(
                     pop["size"], cell, label=pop["label"], initial_values={"v": 0.0}
                 )
-            )
+            pops.append(population)
 
         for proj in spec["projections"]:
             for receptor, rows in split_by_sign(proj["conns"], DT):
@@ -549,13 +606,21 @@ def evaluate_entry(entry, plan_dir, get_model, args):
         100.0 * float((torch.cat(reference).numpy() == labels).mean()), 2
     )
 
-    emulated = emulate(spec, x).argmax(axis=1)
+    logits, peaks = emulate(spec, x)
+    emulated = logits.argmax(axis=1)
     row["accuracy_emulated_pct"] = round(100.0 * float((emulated == labels).mean()), 2)
 
+    shifts = {
+        index: tuple(ring_buffer_shift(peak) for peak in peak_pair)
+        for index, peak_pair in peaks.items()
+    }
+    fixed = emulate(spec, x, shifts)[0].argmax(axis=1)
+    row["accuracy_fixed_point_pct"] = round(100.0 * float((fixed == labels).mean()), 2)
+
     if args.emulate:
-        predictions, status = emulated, "EMULATED"
+        predictions, status = fixed, "EMULATED"
     else:
-        counts, run_time = deploy(spec, x, args.time_scale_factor)
+        counts, run_time = deploy(spec, x, args.time_scale_factor, shifts)
         predictions = readout_logits(spec, counts, time_steps).argmax(axis=1)
         row["sim_time_ms"] = run_time
         status = "SUCCESS"
@@ -649,6 +714,7 @@ def main(argv=None):
             f"[{index}/{len(entries)}] {run_id} : {row['status']} | "
             f"pytorch={row['accuracy_pytorch_pct']}% "
             f"émulé={row['accuracy_emulated_pct']}% "
+            f"virgule_fixe={row['accuracy_fixed_point_pct']}% "
             f"carte={'-' if args.emulate else row['accuracy_pct']}% "
             f"{row['error_msg']}"
         )
