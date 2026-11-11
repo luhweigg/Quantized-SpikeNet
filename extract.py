@@ -58,9 +58,10 @@ def extract_and_save():
                     frame = x_batch[current_t, i].flatten()
                     spiking_neurons = torch.nonzero(frame > 0).squeeze(-1)
 
+                    physical_time = float(current_t * TIME_STEP_MS)
                     for neuron_idx in spiking_neurons:
-                        physical_time = float(current_t * TIME_STEP_MS)
-                        spike_times[neuron_idx.item()].append(physical_time)
+                        count = max(1, round(frame[neuron_idx].item()))
+                        spike_times[neuron_idx.item()].extend([physical_time] * count)
 
                 file_path = os.path.join(dataset_dir, f"sample_{i:02d}.json")
                 with open(file_path, "w", encoding="utf-8") as f:
