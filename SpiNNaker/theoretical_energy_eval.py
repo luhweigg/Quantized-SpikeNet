@@ -88,12 +88,12 @@ log = logging.getLogger("theoretical_energy")
 @dataclass
 class LayerStats:
     name: str
-    kind: str
+    kind: str  # "spiking" | "synaptic" | "skip"
     module_type: str
-    source: str = ""
-    neurons: int = 0
+    source: str = ""  # "input" | "hidden" : origine des évènements présynaptiques
+    neurons: int = 0  # neurones de la couche (spiking) ou présynaptiques (synaptic)
     synapses: int = 0
-    events: float = 0.0
+    events: float = 0.0  # spikes émis ou évènements présynaptiques, tous échantillons
     sops: float = 0.0
 
 
@@ -270,27 +270,31 @@ class SynapticActivityMonitor:
         self._batch["sops_hidden"] += spikes
 
 
-
+# ==========================================
+# CHARGEMENT DU MODÈLE ET DES DONNÉES
+# ==========================================
 def resolve_model_factory():
     try:
-        from models import get_model
-    except ImportError:
         from src.models import get_model
+    except ImportError:
+        from models import get_model
     return get_model
 
 
 def load_state_dict(weights_path):
     try:
         checkpoint = torch.load(weights_path, map_location="cpu", weights_only=True)
-    except pickle.UnpicklingError:
-        # Checkpoints d'entraînement complets (optimizer, état RNG...) : fichiers locaux.
-        checkpoint = torch.load(weights_path, map_location="cpu", weights_only=False)
+    except (pickle.UnpicklingError, TypeError):
+        checkpoint = torch.load(weights_path, map_location="cpu")
 
     for key in ("state_dict", "model_state_dict"):
         if isinstance(checkpoint, dict) and key in checkpoint:
             checkpoint = checkpoint[key]
             break
-    return {k.removeprefix("module."): v for k, v in checkpoint.items()}
+    return {
+        (k[len("module.") :] if k.startswith("module.") else k): v
+        for k, v in checkpoint.items()
+    }
 
 
 def resolve_path(path, plan_dir):
