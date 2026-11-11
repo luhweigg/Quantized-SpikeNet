@@ -14,7 +14,7 @@
             "in_channels": 2,
             "out_classes": 101,
             "dropout": 0.5,
-            "init_stride": 1
+            "init_stride": 2
         },
         "SpikingVGG4": {
             "in_channels": 2,
@@ -32,7 +32,7 @@
             "in_channels": 2,
             "out_classes": 101,
             "dropout": 0.5,
-            "init_stride": 1
+            "init_stride": 2
         },
         "SpikingResNet18": {
             "in_channels": 2,

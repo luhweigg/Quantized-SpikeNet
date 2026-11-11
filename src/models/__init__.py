@@ -1,8 +1,10 @@
+from .factory import ARCHITECTURES, get_model
 from .resnet_networks import SpikingResNet18, SpikingResNet34
 from .simple_networks import CompactSpikingCNN, Spiking1DCNN, SpikingMLP
 from .vgg_networks import SpikingVGG3, SpikingVGG4, SpikingVGG5, SpikingVGG8
 
 __all__ = [
+    "ARCHITECTURES",
     "CompactSpikingCNN",
     "Spiking1DCNN",
     "SpikingMLP",
@@ -12,4 +14,5 @@ __all__ = [
     "SpikingVGG4",
     "SpikingVGG5",
     "SpikingVGG8",
+    "get_model",
 ]
