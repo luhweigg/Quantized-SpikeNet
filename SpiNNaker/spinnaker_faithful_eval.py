@@ -370,9 +370,7 @@ def readout_logits(spec, spike_counts, time_steps):
     return spike_counts @ readout["weight"].T + time_steps * readout["bias"]
 
 
-# ==========================================
-# DÉPLOIEMENT SUR SPINNAKER
-# ==========================================
+
 def split_by_sign(conns, delay):
     """
     Listes excitatrice et inhibitrice (pré, post, |poids|, délai), triées par neurone
@@ -529,7 +527,9 @@ def archive_report(dataset, run_id, results_dir):
     target.parent.mkdir(parents=True, exist_ok=True)
     if target.exists():
         shutil.rmtree(target)
-    shutil.move(str(max(candidates, key=lambda d: d.stat().st_mtime)), str(target))
+    latest = max(candidates, key=lambda d: d.stat().st_mtime)
+    shutil.move(str(latest), str(target))
+    latest.mkdir(exist_ok=True)
     return target
 
 
