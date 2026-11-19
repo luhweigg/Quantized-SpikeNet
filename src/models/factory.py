@@ -1,6 +1,5 @@
 import json
 from pathlib import Path
-from typing import Optional, Union
 
 from torch import nn
 
@@ -26,8 +25,8 @@ DEFAULT_CONFIG_DIR = Path(__file__).resolve().parents[2] / "configs"
 def get_model(
     architecture: str,
     dataset: str,
-    v_threshold: Optional[float] = None,
-    config_dir: Optional[Union[str, Path]] = None,
+    v_threshold: float | None = None,
+    config_dir: str | Path | None = None,
     **overrides,
 ) -> nn.Module:
     """

@@ -1,7 +1,7 @@
 import argparse
 import json
 import os
-from datetime import timezone, datetime
+from datetime import UTC, datetime
 
 import torch
 import wandb
@@ -156,7 +156,7 @@ def main():
             else os.path.dirname(args.resume)
         )
     else:
-        current_time = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+        current_time = datetime.now(UTC).strftime("%Y%m%d_%H%M%S")
         folder_name = f"run_{run_name}_{current_time}"
 
         args.save_dir = os.path.join(args.save_dir, args.dataset, folder_name)
@@ -289,14 +289,17 @@ def main():
     quantized_weights, quantization_metadata = quantize_weights(
         model, num_bits=8, return_metadata=True
     )
-    evaluate(model, test_loader, criterion, device)
+    quantized_acc = evaluate(model, test_loader, criterion, device)[1]
 
     quantized_path = os.path.join(args.save_dir, f"{args.dataset}_quantized.pth")
     torch.save(
         {"weights": quantized_weights, "metadata": quantization_metadata},
         quantized_path,
     )
-    print(f"Integer weights (int8) ready for the FPGA saved in : {quantized_path}")
+    print(
+        f"INT8 weights saved to {quantized_path} "
+        f"(test accuracy after quantization: {quantized_acc:.2f}%)"
+    )
 
     if args.use_wandb:
         wandb.finish()

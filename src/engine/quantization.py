@@ -6,7 +6,7 @@ def quantize_weights(
     model: nn.Module, num_bits: int = 8, return_metadata: bool = False
 ):
     """
-    Apply Fake Quantization for PyTorch evaluation and return the true integer weights (int8) for FPGA export.
+    Apply Fake Quantization for PyTorch evaluation and return the true integer weights (int8) for hardware export.
     """
     quantized_state_dict = {}
     metadata = {}

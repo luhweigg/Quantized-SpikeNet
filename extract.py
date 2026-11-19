@@ -1,27 +1,29 @@
-import os
 import json
+import os
+
 import torch
+
 from src.engine.builder import DATA_LOADERS
 
-NUM_SAMPLES = 30         
+NUM_SAMPLES = 30
 TIME_STEPS_LIST = [4, 8, 16, 32]
-TIME_STEP_MS = 1.0       
+TIME_STEP_MS = 1.0
 
 OUTPUT_DIR = "./spinnaker_data"
+
 
 def extract_and_save():
     os.makedirs(OUTPUT_DIR, exist_ok=True)
 
     for dataset in DATA_LOADERS.keys():
-        print(f"\n{'='*50}")
+        print(f"\n{'=' * 50}")
         print(f"EXTRACTION POUR : {dataset.upper()}")
-        print(f"{'='*50}")
+        print(f"{'=' * 50}")
 
         for t in TIME_STEPS_LIST:
             try:
                 _, test_loader = DATA_LOADERS[dataset](
-                    batch_size=NUM_SAMPLES, 
-                    time_steps=t
+                    batch_size=NUM_SAMPLES, time_steps=t
                 )
             except Exception as e:
                 print(f"[!] Impossible de charger {dataset} à T={t} : {e}")
@@ -35,7 +37,7 @@ def extract_and_save():
 
             T = x_batch.shape[0]
             B = x_batch.shape[1]
-            spatial_shape = list(x_batch.shape[2:]) 
+            spatial_shape = list(x_batch.shape[2:])
             input_neurons_count = x_batch[0, 0].numel()
 
             dataset_dir = os.path.join(OUTPUT_DIR, dataset, f"T_{t}")
@@ -45,9 +47,11 @@ def extract_and_save():
                 "time_steps": T,
                 "spatial_shape": spatial_shape,
                 "input_neurons": input_neurons_count,
-                "time_step_ms": TIME_STEP_MS
+                "time_step_ms": TIME_STEP_MS,
             }
-            with open(os.path.join(dataset_dir, "metadata.json"), "w", encoding="utf-8") as f:
+            with open(
+                os.path.join(dataset_dir, "metadata.json"), "w", encoding="utf-8"
+            ) as f:
                 json.dump(meta_info, f, indent=4)
 
             for i in range(min(B, NUM_SAMPLES)):
@@ -67,7 +71,10 @@ def extract_and_save():
                 with open(file_path, "w", encoding="utf-8") as f:
                     json.dump({"label": label, "spike_times": spike_times}, f)
 
-            print(f"{dataset.upper()} | T={t} : {min(B, NUM_SAMPLES)} JSON générés ({spatial_shape}).")
+            print(
+                f"{dataset.upper()} | T={t} : {min(B, NUM_SAMPLES)} JSON générés ({spatial_shape})."
+            )
+
 
 if __name__ == "__main__":
     extract_and_save()

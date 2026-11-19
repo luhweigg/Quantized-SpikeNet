@@ -1,7 +1,7 @@
 [project]
 name = "quantized-spikenet"
 version = "0.1.0"
-description = "A modular Spiking Neural Network (SNN) training pipeline built with PyTorch and SpikingJelly, optimized for event-based vision tasks and FPGA-ready hardware quantization."
+description = "Training of spiking neural networks on event-based datasets and evaluation of their accuracy and energy on SpiNNaker."
 readme = "README.md"
 requires-python = ">=3.12, <3.14"
 dependencies = [
@@ -10,7 +10,6 @@ dependencies = [
     "imageio>=2.37.4",
     "pandas<3.0.0",
     "pynn>=0.13.0",
-    "pytest>=9.1.1",
     "spikingjelly>=0.0.0.0.14",
     "spynnaker>=1!7.4.1",
     "tonic>=1.6.0",
@@ -27,5 +26,6 @@ filterwarnings = [
 
 [dependency-groups]
 dev = [
+    "pytest>=9.2.0",
     "ruff>=0.15.20",
 ]

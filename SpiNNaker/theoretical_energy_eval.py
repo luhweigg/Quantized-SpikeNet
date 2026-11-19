@@ -288,7 +288,7 @@ def load_state_dict(weights_path):
             checkpoint = checkpoint[key]
             break
     return {
-        (k[len("module.") :] if k.startswith("module.") else k): v
+        (k.removeprefix("module.")): v
         for k, v in checkpoint.items()
     }
 

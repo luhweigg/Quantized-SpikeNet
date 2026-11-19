@@ -183,5 +183,9 @@ networks
 spinnaker_data
 spinnaker_models
 spinnaker_plan.json
+plan_test.json
+spynnaker.cfg
+results_spinnaker*/
+theoretical_energy_results*
 
 # End of https://www.toptal.com/developers/gitignore/api/python

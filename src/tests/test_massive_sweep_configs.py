@@ -15,7 +15,7 @@ DATASET_SHAPES = {
     "dvs_gesture": {"kind": "2d", "channels": 2, "height": 128, "width": 128},
     "dvs_lip": {"kind": "2d", "channels": 2, "height": 128, "width": 128},
     "ncaltech101": {"kind": "2d", "channels": 2, "height": 128, "width": 128},
-    "nepic_kitchens": {"kind": "2d", "channels": 2, "height": 128, "width": 128},
+    "nepic_kitchens": {"kind": "2d", "channels": 1, "height": 256, "width": 456},
     "nmnist": {"kind": "2d", "channels": 2, "height": 34, "width": 34},
     "shd": {"kind": "1d", "channels": 1, "length": 700},
     "smnist": {"kind": "1d", "channels": 2, "length": 99},
