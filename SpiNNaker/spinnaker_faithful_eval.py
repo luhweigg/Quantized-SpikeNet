@@ -1,8 +1,10 @@
 import argparse
 import csv
 import json
+import logging
 import math
 import os
+import re
 import shutil
 import sys
 import time
@@ -22,7 +24,7 @@ try:
 except ImportError:
     spinnaker_energy = None
 
-RESULTS_DIR = Path("results_spinnaker_faithful")
+RESULTS_DIR = Path("results_spinnaker")
 SUMMARY_COLUMNS = [
     "run_id",
     "dataset",
@@ -41,19 +43,71 @@ SUMMARY_COLUMNS = [
     "accuracy_pytorch_pct",
     "accuracy_emulated_pct",
     "accuracy_fixed_point_pct",
+    "agreement_fixed_point_pct",
+    "peak_burst_events",
+    "spike_buffer_max",
+    "buffer_too_small",
+    "lost_input_packets",
+    "late_spikes",
+    "weight_saturations",
+    "router_lost_packets",
+    "reliable",
+    "time_scale_factor",
+    "needed_time_scale_factor",
+    "core_cost_ms",
+    "peak_core_events",
+    "peak_core_spikes",
+    "min_neurons_per_core",
+    "n_cores",
+    "core_overloaded",
+    "timer_overruns",
+    "background_overloads",
+    "max_input_buffer_fill",
+    "provenance_source",
+    "input_bits",
+    "late_by_population",
 ]
 
 DT = 1.0
-TIME_SCALE_FACTOR = 10  # voir spinnaker_master_eval.py : ne pas dépasser 200
+TIME_SCALE_FACTOR = 10
 TAU_M = 1.0 / math.log(
     2.0
-)  # exp(-DT / TAU_M) = 1/2, comme le LIF tau=2 de SpikingJelly
-REST_STEPS = 16  # silence entre deux échantillons : V retombe à 2^-16 de sa valeur
-POOL_THRESHOLD = 0.5  # un neurone « OU » décharge dès qu'il reçoit un spike de poids 1
+)
+REST_STEPS = 16
+POOL_THRESHOLD = 0.5
 READOUT_THRESHOLD = 30000.0
 INPUT_NEURONS_PER_CORE = 256
 NEURONS_PER_CORE = 128
-WEIGHT_MARGIN = 1.25  # marge sur la somme de poids maximale observée en émulation
+WEIGHT_MARGIN = 1.25
+MIN_SPIKE_BUFFER = 256
+MAX_SPIKE_BUFFER = 8192
+BUFFER_MARGIN = 1.25
+CORE_SIZES = (128, 64, 32, 16, 8)
+COST_PER_SPIKE_US = 8.0
+COST_PER_EVENT_US = 0.04
+TICK_USABLE = 0.8
+MAX_TIME_SCALE_FACTOR = 200
+LOSS_COUNTERS = {
+    "lost_input_packets": "Times_the_input_buffer_lost_packets",
+    "late_spikes": "Number_of_late_spikes",
+    "timer_overruns": "Times_the_timer_tic_over_ran",
+    "background_overloads": "Times_the_background_queue_overloaded",
+    "weight_saturations": "Times_synaptic_weights_have_saturated",
+}
+MAX_COUNTERS = {"max_input_buffer_fill": "Max_filled_size_input_buffer"}
+ROUTER_LOSS_SUFFIXES = ("Missed_For_Reinjection", "Reinjection_Overflows")
+PROVENANCE_OPTIONS = (
+    "write_provenance",
+    "read_graph_provenance_data",
+    "read_placements_provenance_data",
+    "read_router_provenance_data",
+    "keep_data_database",
+)
+LOG_PATTERNS = {
+    "lost_input_packets": r"input buffer for .* lost packets on (\d+) occasions",
+    "late_spikes": r", (\d+) packets (?:were dropped|arrived too late)",
+    "timer_overruns": r"next timer tick callback was fired off (\d+) times",
+}
 
 
 class Unsupported(Exception):
@@ -101,11 +155,10 @@ def conv_connections(module, in_shape, max_synapses):
     if module.out_channels * fan_in * n_out_pos > max_synapses:
         raise TooLarge("trop de synapses dans une convolution")
 
-    # Indice (+1) du neurone d'entrée vu par chaque élément du noyau ; 0 = padding.
     index = torch.arange(1, channels * height * width + 1, dtype=torch.float64)
     index = F.unfold(
         index.reshape(1, channels, height, width), kernel, dilation, padding, stride
-    )[0].long()  # [fan_in, n_out_pos]
+    )[0].long()
     weight = module.weight.detach().double().reshape(module.out_channels, fan_in)
 
     pre = index.unsqueeze(0).expand(module.out_channels, fan_in, n_out_pos)
@@ -193,7 +246,7 @@ def convert_model(model, input_shape, max_synapses=30_000_000):
     ]
     projections = []
     source = 0
-    pending = None  # (conns, bias, out_shape, dense) en attente du neurone suivant
+    pending = None
     averaged = False
 
     def add_population(kind, size, threshold, conns, bias=None):
@@ -271,6 +324,40 @@ def convert_model(model, input_shape, max_synapses=30_000_000):
     return {"populations": pops, "projections": projections, "readout": readout}
 
 
+def bitplane_input(spec, x):
+    """
+    Remplace chaque canal d'entrée par un neurone source par bit de son compte.
+    Un canal qui émet c évènements dans un pas envoyait c paquets identiques ; il n'en
+    envoie plus que le nombre de bits à 1 de c, et la copie du bit j porte un poids
+    2^j fois plus grand. La somme reçue par chaque neurone est inchangée (synapses
+    instantanées) : le réseau calcule exactement la même chose, avec 2 à 4 fois moins de
+    paquets à traiter quand les entrées sont des comptes (SHD, SSC, S-MNIST).
+    x : [T, B, n] comptes entiers. Retourne (spec, x, nombre de bits).
+    """
+    counts = x.reshape(x.shape[0], x.shape[1], -1).round().long()
+    n_bits = max(1, int(counts.max()).bit_length())
+    if n_bits == 1:
+        return spec, x, 1
+    n_inputs = counts.shape[2]
+    x_bits = torch.cat([((counts >> j) & 1) for j in range(n_bits)], dim=2).double()
+
+    populations = [dict(p) for p in spec["populations"]]
+    populations[0]["size"] = n_inputs * n_bits
+    projections = []
+    for proj in spec["projections"]:
+        if proj["pre"] != 0:
+            projections.append(proj)
+            continue
+        copies = []
+        for j in range(n_bits):
+            conns = proj["conns"].copy()
+            conns[:, 0] += j * n_inputs
+            conns[:, 2] *= 2.0**j
+            copies.append(conns)
+        projections.append(dict(proj, conns=np.concatenate(copies)))
+    return dict(spec, populations=populations, projections=projections), x_bits, n_bits
+
+
 def network_size(spec):
     neurons = sum(p["size"] for p in spec["populations"])
     synapses = sum(len(p["conns"]) for p in spec["projections"])
@@ -303,15 +390,22 @@ def emulate(spec, x, shifts=None):
     x : [T, B, n_entrées] (comptes d'évènements).
     shifts : {population: (shift excitateur, shift inhibiteur)} pour reproduire aussi la
     quantification des poids et la saturation de la carte ; None = arithmétique exacte.
-    Retourne les logits [B, classes] et, par population, la plus grande somme de poids
-    excitatrice et inhibitrice reçue par un neurone en un pas de temps.
+    Retourne les logits [B, classes], par population la plus grande somme de poids
+    excitatrice et inhibitrice reçue par un neurone en un pas de temps, et par population
+    la plus grosse rafale d'évènements qu'elle peut recevoir en un pas (tous les spikes
+    émis par la population source pendant ce pas, plus le spike de biais).
     """
     time_steps, batch = x.shape[0], x.shape[1]
     spikes = {0: x.reshape(time_steps, batch, -1).double()}
     peaks = {}
+    bursts = {}
+    loads = {}
     for proj in spec["projections"]:
         post = proj["post"]
         pop = spec["populations"][post]
+        bursts[post] = float(spikes[proj["pre"]].sum(dim=2).max()) + 1.0
+        if shifts is None:
+            loads[post] = core_loads(proj["conns"], spikes[proj["pre"]])
         if pop["kind"] == "Readout":
             continue
         conns = proj["conns"]
@@ -361,7 +455,199 @@ def emulate(spec, x, shifts=None):
     logits = readout_logits(
         spec, spikes[spec["readout"]["pre"]].sum(dim=0).numpy(), time_steps
     )
-    return logits, peaks
+    return logits, peaks, bursts, loads
+
+
+def core_loads(conns, pre_spikes):
+    """
+    Travail demandé au cœur le plus chargé d'une population, au pas le plus chargé, pour
+    chaque nombre de neurones par cœur envisagé (les neurones sont répartis par blocs
+    contigus, comme le fait sPyNNaker).
+    pre_spikes : [T, B, n_pré] (comptes d'évènements de la population source).
+    Retourne {neurones par cœur: (évènements synaptiques, spikes reçus)} : un spike reçu
+    coûte une lecture de ligne synaptique, puis chaque synapse de la ligne est traitée.
+    """
+    pre = conns[:, 0].astype(np.int64)
+    n_pre = pre_spikes.shape[2]
+    frames = pre_spikes.reshape(-1, n_pre).T
+    result = {}
+    for size in CORE_SIZES:
+        core = conns[:, 1].astype(np.int64) // size
+        n_cores = int(core.max()) + 1 if len(core) else 1
+        pair_ids, synapses = np.unique(core * n_pre + pre, return_counts=True)
+        index = np.stack([pair_ids // n_pre, pair_ids % n_pre])
+        loads = []
+        for values in (synapses.astype(np.float64), np.ones(len(pair_ids))):
+            matrix = torch.sparse_coo_tensor(
+                index, values, (n_cores, n_pre), dtype=torch.float64
+            ).coalesce()
+            loads.append(float(torch.sparse.mm(matrix, frames).max()) if len(pre) else 0.0)
+        result[size] = (loads[0], loads[1] + 1.0)  # + le spike de biais
+    return result
+
+
+def core_cost_us(events, spikes, cost_event, cost_spike):
+    """Temps estimé (µs) pour qu'un cœur traite un pas."""
+    return events * cost_event + spikes * cost_spike
+
+
+def count_cores(spec, core_sizes):
+    """Cœurs demandés : sources d'entrée, puis chaque population à son découpage."""
+    return math.ceil(spec["populations"][0]["size"] / INPUT_NEURONS_PER_CORE) + sum(
+        math.ceil(spec["populations"][p]["size"] / core_sizes.get(p, NEURONS_PER_CORE))
+        for p in range(1, len(spec["populations"]))
+    )
+
+
+def worst_cost_ms(loads, core_sizes, cost_event, cost_spike):
+    """Temps estimé (ms) du cœur le plus chargé, au découpage donné."""
+    return max(
+        core_cost_us(*loads[p][core_sizes[p]], cost_event, cost_spike) for p in loads
+    ) / 1000.0
+
+
+def needed_time_scale_factor(spec, loads, cost_event, cost_spike, max_cores):
+    """
+    Plus petit time_scale_factor (multiple de 10) pour lequel chaque cœur finit son pas
+    à temps ET le réseau découpé tient dans max_cores. Ralentir la carte permet de
+    garder plus de neurones par cœur, donc moins de cœurs : un gros réseau qui ne tient
+    pas une fois découpé au facteur 10 peut tenir au facteur 20 ou 30.
+    Retourne le facteur, ou None si aucun facteur jusqu'à MAX_TIME_SCALE_FACTOR ne va.
+    """
+    for factor in range(10, MAX_TIME_SCALE_FACTOR + 1, 10):
+        sizes, overloaded = neurons_per_core(loads, factor, cost_event, cost_spike)
+        if not overloaded and count_cores(spec, sizes) <= max_cores:
+            return factor
+    return None
+
+
+def neurons_per_core(loads, time_scale_factor, cost_event, cost_spike):
+    """
+    Plus grand nombre de neurones par cœur pour lequel le cœur le plus chargé finit son
+    pas à temps (un pas dure time_scale_factor ms de temps réel). Réduire le nombre de
+    neurones par cœur divise les synapses à traiter par cœur, pas les spikes reçus.
+    Si aucun découpage ne suffit, prend le moins coûteux et signale la population.
+    Retourne {population: neurones par cœur} et la liste des populations surchargées.
+    """
+    budget = TICK_USABLE * time_scale_factor * 1000.0
+    sizes, overloaded = {}, []
+    for post, by_size in loads.items():
+        costs = {n: core_cost_us(e, r, cost_event, cost_spike) for n, (e, r) in by_size.items()}
+        fitting = [n for n in CORE_SIZES if costs[n] <= budget]
+        if fitting:
+            sizes[post] = fitting[0]
+        else:
+            sizes[post] = min(CORE_SIZES, key=lambda n: (costs[n], -n))
+            overloaded.append(post)
+    return sizes, overloaded
+
+
+def spike_buffer_sizes(bursts, max_size=MAX_SPIKE_BUFFER):
+    """
+    Taille du tampon d'entrée de chaque population : la plus grosse rafale observée en
+    émulation, avec une marge, arrondie à la puissance de 2 supérieure (le tampon
+    circulaire de SpiNNaker l'arrondit de toute façon). Majorant : on suppose que tous
+    les spikes de la population source arrivent sur le même cœur.
+    Retourne {population: taille} et la liste des populations dont la rafale dépasse
+    max_size (des pertes sont alors possibles).
+    """
+    sizes, too_small = {}, []
+    for post, burst in bursts.items():
+        needed = burst * BUFFER_MARGIN
+        size = MIN_SPIKE_BUFFER
+        while size < needed and size < max_size:
+            size *= 2
+        sizes[post] = min(size, max_size)
+        if needed > max_size:
+            too_small.append(post)
+    return sizes, too_small
+
+
+def read_losses():
+    """
+    Somme, sur tous les cœurs, des compteurs de pertes écrits par sPyNNaker dans la base
+    de provenance du dernier run. À appeler après sim.run() et avant sim.end().
+    Retourne {colonne: valeur} ; valeurs vides si la base est illisible.
+    """
+    columns = list(LOSS_COUNTERS) + list(MAX_COUNTERS) + ["router_lost_packets"]
+    losses = dict.fromkeys(columns, "")
+    losses["provenance_source"] = ""
+    try:
+        from spinn_front_end_common.interface.provenance import ProvenanceReader
+
+        with ProvenanceReader() as reader:
+            n_rows = int(reader.run_query("SELECT COUNT(*) FROM core_provenance")[0][0])
+            if n_rows == 0:
+                raise RuntimeError("table core_provenance vide (write_provenance désactivé ?)")
+            for column, description in LOSS_COUNTERS.items():
+                rows = reader.run_query(
+                    "SELECT COALESCE(SUM(the_value), 0) FROM core_provenance "
+                    "WHERE description = ?",
+                    [description],
+                )
+                losses[column] = int(rows[0][0])
+            for column, description in MAX_COUNTERS.items():
+                rows = reader.run_query(
+                    "SELECT COALESCE(MAX(the_value), 0) FROM core_provenance "
+                    "WHERE description = ?",
+                    [description],
+                )
+                losses[column] = int(rows[0][0])
+            router = 0
+            for suffix in ROUTER_LOSS_SUFFIXES:
+                rows = reader.run_query(
+                    "SELECT COALESCE(SUM(the_value), 0) FROM router_provenance "
+                    "WHERE description LIKE ?",
+                    ["%" + suffix],
+                )
+                router += int(rows[0][0])
+            rows = reader.run_query(
+                "SELECT core_name, SUM(the_value) FROM core_provenance_view "
+                "WHERE description = ? AND the_value > 0 GROUP BY core_name",
+                [LOSS_COUNTERS["late_spikes"]],
+            )
+        by_population = {}
+        for core_name, value in rows:
+            label = str(core_name).split("(")[0].split(":")[0]
+            by_population[label] = by_population.get(label, 0) + int(value)
+        losses["late_by_population"] = ";".join(
+            f"{k}:{v}" for k, v in sorted(by_population.items())
+        )
+        losses["router_lost_packets"] = router
+        losses["provenance_source"] = "base"
+    except Exception as exc:
+        losses["provenance_source"] = f"illisible : {type(exc).__name__}: {exc}"[:150]
+        print(f"[!] Base de provenance illisible ({exc}) : lecture du journal à la place.")
+    return losses
+
+
+class LogCounter(logging.Handler):
+    """Additionne les compteurs cités dans les avertissements de sPyNNaker."""
+
+    def __init__(self):
+        super().__init__(level=logging.WARNING)
+        self.totals = dict.fromkeys(LOG_PATTERNS, 0)
+        self.patterns = {k: re.compile(p) for k, p in LOG_PATTERNS.items()}
+
+    def emit(self, record):
+        try:
+            message = record.getMessage()
+        except Exception:  # noqa: BLE001
+            return
+        for column, pattern in self.patterns.items():
+            for match in pattern.finditer(message):
+                self.totals[column] += int(next(g for g in match.groups() if g))
+
+
+def enable_provenance():
+    """Force l'écriture de la provenance dans la base (à appeler après sim.setup)."""
+    try:
+        from spinn_utilities.config_holder import set_config
+
+        for option in PROVENANCE_OPTIONS:
+            set_config("Reports", option, "True")
+    except Exception as exc:  # noqa: BLE001
+        print(f"[!] Impossible de forcer la provenance : {exc}")
 
 
 def readout_logits(spec, spike_counts, time_steps):
@@ -411,8 +697,12 @@ def delta_neuron_model(sim):
     )
 
 
-def deploy(spec, x, time_scale_factor, shifts):
-    """Exécute le réseau sur la carte ; retourne les spikes comptés par échantillon."""
+def deploy(spec, x, time_scale_factor, shifts, buffer_sizes, core_sizes):
+    """
+    Exécute le réseau sur la carte ; retourne les spikes comptés par échantillon, la
+    durée simulée et les compteurs de pertes relevés dans la provenance.
+    core_sizes : {population: neurones par cœur} (128 si absent).
+    """
     import pyNN.spiNNaker as sim
 
     time_steps, n_samples = x.shape[0], x.shape[1]
@@ -420,7 +710,6 @@ def deploy(spec, x, time_scale_factor, shifts):
     window = time_steps + max_depth + REST_STEPS
     run_time = float(n_samples * window)
 
-    # Entrée : un spike répété n fois dans le même pas de temps vaut n évènements.
     frames = x.reshape(time_steps, n_samples, -1)
     spike_times = [[] for _ in range(frames.shape[2])]
     for step, sample, index in torch.nonzero(frames).tolist():
@@ -433,6 +722,7 @@ def deploy(spec, x, time_scale_factor, shifts):
     ]
 
     sim.setup(timestep=DT, time_scale_factor=time_scale_factor)
+    enable_provenance()
     sim.set_number_of_neurons_per_core(sim.SpikeSourceArray, INPUT_NEURONS_PER_CORE)
     cell_type = delta_neuron_model(sim)
     sim.set_number_of_neurons_per_core(cell_type, NEURONS_PER_CORE)
@@ -463,6 +753,8 @@ def deploy(spec, x, time_scale_factor, shifts):
                 options["max_expected_summed_weight"] = [
                     0.75 * 2.0**shift for shift in shifts[index]
                 ]
+            if index in buffer_sizes:
+                options["incoming_spike_buffer_size"] = int(buffer_sizes[index])
             try:
                 population = sim.Population(
                     pop["size"],
@@ -473,11 +765,14 @@ def deploy(spec, x, time_scale_factor, shifts):
                 )
             except TypeError:
                 print(
-                    "[!] max_expected_summed_weight refusé par cette version de sPyNNaker."
+                    "[!] max_expected_summed_weight / incoming_spike_buffer_size refusés "
+                    "par cette version de sPyNNaker : résultats non fiables."
                 )
                 population = sim.Population(
                     pop["size"], cell, label=pop["label"], initial_values={"v": 0.0}
                 )
+            if core_sizes.get(index, NEURONS_PER_CORE) < NEURONS_PER_CORE:
+                population.set_max_atoms_per_core(int(core_sizes[index]))
             pops.append(population)
 
         for proj in spec["projections"]:
@@ -503,7 +798,16 @@ def deploy(spec, x, time_scale_factor, shifts):
 
         readout_pop = pops[spec["readout"]["pre"]]
         readout_pop.record(["spikes"])
-        sim.run(run_time)
+        log_counter = LogCounter()
+        logging.getLogger().addHandler(log_counter)
+        try:
+            sim.run(run_time)
+        finally:
+            logging.getLogger().removeHandler(log_counter)
+        losses = read_losses()
+        if losses["provenance_source"] != "base":
+            losses.update(log_counter.totals)
+            losses["provenance_source"] = "journal ; " + losses["provenance_source"]
         recorded = np.asarray(readout_pop.spinnaker_get_data("spikes"))
     finally:
         sim.end()
@@ -512,7 +816,7 @@ def deploy(spec, x, time_scale_factor, shifts):
     if len(recorded):
         samples = np.minimum((recorded[:, 1] // window).astype(np.int64), n_samples - 1)
         np.add.at(counts, (samples, recorded[:, 0].astype(np.int64)), 1.0)
-    return counts, run_time
+    return counts, run_time, losses
 
 
 def archive_report(dataset, run_id, results_dir):
@@ -606,7 +910,13 @@ def evaluate_entry(entry, plan_dir, get_model, args):
         100.0 * float((torch.cat(reference).numpy() == labels).mean()), 2
     )
 
-    logits, peaks = emulate(spec, x)
+    if args.no_bitplane:
+        x_hw, n_bits = x, 1
+    else:
+        spec, x_hw, n_bits = bitplane_input(spec, x)
+    row["input_bits"] = n_bits
+
+    logits, peaks, bursts, loads = emulate(spec, x_hw)
     emulated = logits.argmax(axis=1)
     row["accuracy_emulated_pct"] = round(100.0 * float((emulated == labels).mean()), 2)
 
@@ -614,24 +924,102 @@ def evaluate_entry(entry, plan_dir, get_model, args):
         index: tuple(ring_buffer_shift(peak) for peak in peak_pair)
         for index, peak_pair in peaks.items()
     }
-    fixed = emulate(spec, x, shifts)[0].argmax(axis=1)
+    fixed = emulate(spec, x_hw, shifts)[0].argmax(axis=1)
     row["accuracy_fixed_point_pct"] = round(100.0 * float((fixed == labels).mean()), 2)
+
+    needed = needed_time_scale_factor(
+        spec, loads, args.cost_per_event_us, args.cost_per_spike_us, args.max_cores
+    )
+    if args.time_scale_factor == "auto":
+        if needed is None:
+            raise TooLarge(
+                f"aucun facteur jusqu'à {MAX_TIME_SCALE_FACTOR} ne tient dans "
+                f"{args.max_cores} cœurs"
+            )
+        time_scale_factor = needed
+    else:
+        time_scale_factor = int(args.time_scale_factor)
+    core_sizes, overloaded = neurons_per_core(
+        loads, time_scale_factor, args.cost_per_event_us, args.cost_per_spike_us
+    )
+    if args.neurons_per_core:
+        core_sizes = dict.fromkeys(core_sizes, args.neurons_per_core)
+    n_cores = count_cores(spec, core_sizes)
+    worst_ms = worst_cost_ms(
+        loads, core_sizes, args.cost_per_event_us, args.cost_per_spike_us
+    )
+    row.update(
+        time_scale_factor=time_scale_factor,
+        needed_time_scale_factor="" if needed is None else needed,
+        core_cost_ms=round(worst_ms, 2),
+        peak_core_events=int(max(loads[p][core_sizes[p]][0] for p in loads)),
+        peak_core_spikes=int(max(loads[p][core_sizes[p]][1] for p in loads)),
+        min_neurons_per_core=min(core_sizes.values()),
+        n_cores=n_cores,
+        core_overloaded=bool(overloaded),
+    )
+    if overloaded:
+        print(
+            f"[!] Cœurs surchargés au facteur {time_scale_factor} pour "
+            f"{[spec['populations'][p]['label'] for p in overloaded]} : il faudrait "
+            f"--time-scale-factor {needed} pour ce run."
+        )
+    if n_cores > args.max_cores:
+        raise TooLarge(
+            f"{n_cores} cœurs nécessaires au facteur {time_scale_factor} "
+            f"(facteur minimal pour tenir : {needed})"
+        )
+    per_core = {p: loads[p][core_sizes[p]][1] for p in loads}
+    buffer_sizes, too_small = spike_buffer_sizes(per_core, args.max_spike_buffer)
+    row.update(
+        peak_burst_events=int(max(bursts.values())),
+        spike_buffer_max=max(buffer_sizes.values()),
+        buffer_too_small=bool(too_small),
+    )
+    if too_small:
+        labels_too_small = [spec["populations"][p]["label"] for p in too_small]
+        print(
+            f"[!] Un cœur reçoit plus de spikes par pas que le tampon maximal "
+            f"({args.max_spike_buffer}) pour {labels_too_small} : pertes possibles."
+        )
 
     if args.emulate:
         predictions, status = fixed, "EMULATED"
     else:
-        counts, run_time = deploy(spec, x, args.time_scale_factor, shifts)
+        counts, run_time, losses = deploy(
+            spec, x_hw, time_scale_factor, shifts, buffer_sizes, core_sizes
+        )
         predictions = readout_logits(spec, counts, time_steps).argmax(axis=1)
         row["sim_time_ms"] = run_time
+        row.update(losses)
         status = "SUCCESS"
 
     correct = int((predictions == labels).sum())
+    agreement = round(100.0 * float((predictions == fixed).mean()), 2)
+    lost = [
+        row[c] for c in ("lost_input_packets", "late_spikes", "timer_overruns")
+    ] + ([row["router_lost_packets"]] if row["router_lost_packets"] != "" else [])
     row.update(
         status=status,
         accuracy_pct=round(100.0 * correct / len(labels), 2),
         correct_samples=correct,
         wall_time_s=round(time.time() - start, 2),
+        agreement_fixed_point_pct=agreement,
+        reliable=(
+            "" if args.emulate else all(v != "" and int(v) == 0 for v in lost)
+        ),
     )
+
+    pred_dir = args.results_dir / "predictions"
+    pred_dir.mkdir(parents=True, exist_ok=True)
+    with open(pred_dir / f"{row['run_id']}.csv", "w", newline="", encoding="utf-8") as f:
+        writer = csv.writer(f)
+        writer.writerow(["sample", "label", "pytorch", "fixed_point", "carte"])
+        pytorch_pred = torch.cat(reference).numpy()
+        for k in range(len(labels)):
+            writer.writerow(
+                [k, int(labels[k]), int(pytorch_pred[k]), int(fixed[k]), int(predictions[k])]
+            )
     return row
 
 
@@ -649,7 +1037,11 @@ def main(argv=None):
         action="store_true",
         help="Ne pas utiliser la carte : émuler le réseau converti en logiciel",
     )
-    parser.add_argument("--time-scale-factor", type=int, default=TIME_SCALE_FACTOR)
+    parser.add_argument(
+        "--time-scale-factor",
+        default=str(TIME_SCALE_FACTOR),
+        help="Ralentissement de la carte (entier), ou « auto » : le minimum estimé par run",
+    )
     parser.add_argument(
         "--max-cores",
         type=int,
@@ -657,9 +1049,47 @@ def main(argv=None):
         help="Budget de cœurs (une carte SpiNN-5 en offre environ 750 utilisables)",
     )
     parser.add_argument("--max-synapses", type=int, default=30_000_000)
+    parser.add_argument(
+        "--max-spike-buffer",
+        type=int,
+        default=MAX_SPIKE_BUFFER,
+        help="Tampon d'entrée maximal par cœur, en spikes (4096 sûr, 8192 à tester)",
+    )
+    parser.add_argument(
+        "--cost-per-spike-us",
+        type=float,
+        default=COST_PER_SPIKE_US,
+        help="Coût estimé d'un spike reçu par un cœur (µs)",
+    )
+    parser.add_argument(
+        "--cost-per-event-us",
+        type=float,
+        default=COST_PER_EVENT_US,
+        help="Coût estimé d'une synapse traitée (µs)",
+    )
+    parser.add_argument(
+        "--neurons-per-core",
+        type=int,
+        default=None,
+        choices=CORE_SIZES,
+        help="Imposer le même nombre de neurones par cœur à toutes les couches (essais)",
+    )
+    parser.add_argument(
+        "--no-bitplane",
+        action="store_true",
+        help="Envoyer les comptes d'entrée tels quels (un paquet par évènement)",
+    )
+    parser.add_argument(
+        "--retry-unreliable",
+        action="store_true",
+        help="Relancer aussi les runs SUCCESS dont reliable vaut False",
+    )
     args = parser.parse_args(argv)
-    if not 1 <= args.time_scale_factor <= 200:
-        parser.error("--time-scale-factor doit être entre 1 et 200.")
+    if args.time_scale_factor != "auto":
+        if not args.time_scale_factor.isdigit() or not (
+            1 <= int(args.time_scale_factor) <= MAX_TIME_SCALE_FACTOR
+        ):
+            parser.error("--time-scale-factor doit être « auto » ou un entier de 1 à 200.")
 
     results_dir = args.results_dir
     results_dir.mkdir(parents=True, exist_ok=True)
@@ -669,7 +1099,19 @@ def main(argv=None):
     done = set()
     if summary_path.is_file():
         with open(summary_path, newline="", encoding="utf-8") as f:
-            done = {r["run_id"] for r in csv.DictReader(f) if r["status"] == "SUCCESS"}
+            reader = csv.DictReader(f)
+            if reader.fieldnames != SUMMARY_COLUMNS:
+                raise SystemExit(
+                    f"{summary_path} a été écrit par une autre version du script : "
+                    "choisir un autre --results-dir."
+                )
+            last = {r["run_id"]: r for r in reader}
+        done = {
+            run_id
+            for run_id, r in last.items()
+            if r["status"] == "SUCCESS"
+            and not (args.retry_unreliable and r["reliable"] != "True")
+        }
     else:
         with open(summary_path, "w", newline="", encoding="utf-8") as f:
             csv.DictWriter(f, fieldnames=SUMMARY_COLUMNS).writeheader()
@@ -692,7 +1134,7 @@ def main(argv=None):
         run_id = tee.run_id_of(entry)
         try:
             row = evaluate_entry(entry, plan_dir, get_model, args)
-        except Exception as exc:  # noqa: BLE001 - un run en échec ne doit pas arrêter le plan
+        except Exception as exc:
             row = dict.fromkeys(SUMMARY_COLUMNS, "")
             status = {Unsupported: "UNSUPPORTED", TooLarge: "TOO_LARGE"}.get(
                 type(exc), "EMULATION_ERROR" if args.emulate else "HARDWARE_ERROR"
@@ -716,7 +1158,11 @@ def main(argv=None):
             f"émulé={row['accuracy_emulated_pct']}% "
             f"virgule_fixe={row['accuracy_fixed_point_pct']}% "
             f"carte={'-' if args.emulate else row['accuracy_pct']}% "
-            f"{row['error_msg']}"
+            f"accord={row['agreement_fixed_point_pct']}% "
+            f"perdus={row['lost_input_packets']} tardifs={row['late_spikes']} "
+            f"retards_timer={row['timer_overruns']} "
+            f"neurones/cœur={row['min_neurons_per_core']} "
+            f"fiable={row['reliable']} {row['error_msg']}"
         )
 
         if row["status"] == "SUCCESS":
@@ -724,7 +1170,7 @@ def main(argv=None):
             if spinnaker_energy is not None:
                 try:
                     spinnaker_energy.collect_to_csv(results_dir)
-                except Exception as exc:  # noqa: BLE001
+                except Exception as exc:
                     print(f"[!] Extraction de l'énergie impossible : {exc}")
 
     print(f"Résumé : {summary_path}")
