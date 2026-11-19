@@ -287,10 +287,7 @@ def load_state_dict(weights_path):
         if isinstance(checkpoint, dict) and key in checkpoint:
             checkpoint = checkpoint[key]
             break
-    return {
-        (k.removeprefix("module.")): v
-        for k, v in checkpoint.items()
-    }
+    return {(k.removeprefix("module.")): v for k, v in checkpoint.items()}
 
 
 def resolve_path(path, plan_dir):
@@ -614,7 +611,7 @@ def main(argv=None):
                 row["energie_theorique_joules"],
                 row["wall_time_s"],
             )
-        except Exception as exc: # noqa: BLE001
+        except Exception as exc:  # noqa: BLE001
             row = base_row(entry)
             row.update(
                 status="MISSING_FILE"

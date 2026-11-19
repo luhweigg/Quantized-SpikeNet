@@ -618,7 +618,7 @@ def read_losses():
         )
         losses["router_lost_packets"] = router
         losses["provenance_source"] = "base"
-    except Exception as exc: # noqa: BLE001
+    except Exception as exc:  # noqa: BLE001
         losses["provenance_source"] = f"illisible : {type(exc).__name__}: {exc}"[:150]
         print(
             f"[!] Base de provenance illisible ({exc}) : lecture du journal à la place."
@@ -651,7 +651,7 @@ def enable_provenance():
 
         for option in PROVENANCE_OPTIONS:
             set_config("Reports", option, "True")
-    except Exception as exc: # noqa: BLE001
+    except Exception as exc:  # noqa: BLE001
         print(f"[!] Impossible de forcer la provenance : {exc}")
 
 
@@ -1145,7 +1145,7 @@ def main(argv=None):
         run_id = tee.run_id_of(entry)
         try:
             row = evaluate_entry(entry, plan_dir, get_model, args)
-        except Exception as exc: # noqa: BLE001
+        except Exception as exc:  # noqa: BLE001
             row = dict.fromkeys(SUMMARY_COLUMNS, "")
             status = {Unsupported: "UNSUPPORTED", TooLarge: "TOO_LARGE"}.get(
                 type(exc), "EMULATION_ERROR" if args.emulate else "HARDWARE_ERROR"
@@ -1180,7 +1180,7 @@ def main(argv=None):
             archive_report(entry["dataset"], run_id, results_dir)
             try:
                 spinnaker_energy.collect_to_csv(results_dir)
-            except Exception as exc: # noqa: BLE001
+            except Exception as exc:  # noqa: BLE001
                 print(f"[!] Extraction de l'énergie impossible : {exc}")
 
     print(f"Résumé : {summary_path}")

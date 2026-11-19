@@ -25,13 +25,13 @@ def extract_and_save():
                 _, test_loader = DATA_LOADERS[dataset](
                     batch_size=NUM_SAMPLES, time_steps=t
                 )
-            except Exception as e: # noqa: BLE001
+            except Exception as e:  # noqa: BLE001
                 print(f"[!] Impossible de charger {dataset} à T={t} : {e}")
                 continue
 
             try:
                 x_batch, y_batch = next(iter(test_loader))
-            except Exception as e: # noqa: BLE001
+            except Exception as e:  # noqa: BLE001
                 print(f"[!] Erreur de lecture pour {dataset} à T={t} : {e}")
                 continue
 
