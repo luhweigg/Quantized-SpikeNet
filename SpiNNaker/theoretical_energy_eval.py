@@ -614,7 +614,7 @@ def main(argv=None):
                 row["energie_theorique_joules"],
                 row["wall_time_s"],
             )
-        except Exception as exc:
+        except Exception as exc: # noqa: BLE001
             row = base_row(entry)
             row.update(
                 status="MISSING_FILE"

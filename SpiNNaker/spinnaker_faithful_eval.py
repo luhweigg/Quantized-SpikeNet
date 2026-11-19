@@ -618,7 +618,7 @@ def read_losses():
         )
         losses["router_lost_packets"] = router
         losses["provenance_source"] = "base"
-    except Exception as exc:
+    except Exception as exc: # noqa: BLE001
         losses["provenance_source"] = f"illisible : {type(exc).__name__}: {exc}"[:150]
         print(
             f"[!] Base de provenance illisible ({exc}) : lecture du journal à la place."
@@ -637,7 +637,7 @@ class LogCounter(logging.Handler):
     def emit(self, record):
         try:
             message = record.getMessage()
-        except Exception:
+        except (TypeError, ValueError):
             return
         for column, pattern in self.patterns.items():
             for match in pattern.finditer(message):
@@ -651,7 +651,7 @@ def enable_provenance():
 
         for option in PROVENANCE_OPTIONS:
             set_config("Reports", option, "True")
-    except Exception as exc:
+    except Exception as exc: # noqa: BLE001
         print(f"[!] Impossible de forcer la provenance : {exc}")
 
 
@@ -1093,13 +1093,14 @@ def main(argv=None):
         help="Relancer aussi les runs SUCCESS dont reliable vaut False",
     )
     args = parser.parse_args(argv)
-    if args.time_scale_factor != "auto":
-        if not args.time_scale_factor.isdigit() or not (
-            1 <= int(args.time_scale_factor) <= MAX_TIME_SCALE_FACTOR
-        ):
-            parser.error(
-                "--time-scale-factor doit être « auto » ou un entier de 1 à 200."
-            )
+    if args.time_scale_factor != "auto" and (
+        not args.time_scale_factor.isdigit()
+        or not 1 <= int(args.time_scale_factor) <= MAX_TIME_SCALE_FACTOR
+    ):
+        parser.error(
+            "--time-scale-factor doit être « auto » ou un entier "
+            f"de 1 à {MAX_TIME_SCALE_FACTOR}."
+        )
 
     results_dir = args.results_dir
     results_dir.mkdir(parents=True, exist_ok=True)
@@ -1144,7 +1145,7 @@ def main(argv=None):
         run_id = tee.run_id_of(entry)
         try:
             row = evaluate_entry(entry, plan_dir, get_model, args)
-        except Exception as exc:
+        except Exception as exc: # noqa: BLE001
             row = dict.fromkeys(SUMMARY_COLUMNS, "")
             status = {Unsupported: "UNSUPPORTED", TooLarge: "TOO_LARGE"}.get(
                 type(exc), "EMULATION_ERROR" if args.emulate else "HARDWARE_ERROR"
@@ -1179,7 +1180,7 @@ def main(argv=None):
             archive_report(entry["dataset"], run_id, results_dir)
             try:
                 spinnaker_energy.collect_to_csv(results_dir)
-            except Exception as exc:
+            except Exception as exc: # noqa: BLE001
                 print(f"[!] Extraction de l'énergie impossible : {exc}")
 
     print(f"Résumé : {summary_path}")

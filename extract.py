@@ -15,7 +15,7 @@ OUTPUT_DIR = "./spinnaker_data"
 def extract_and_save():
     os.makedirs(OUTPUT_DIR, exist_ok=True)
 
-    for dataset in DATA_LOADERS.keys():
+    for dataset in DATA_LOADERS:
         print(f"\n{'=' * 50}")
         print(f"EXTRACTION POUR : {dataset.upper()}")
         print(f"{'=' * 50}")
@@ -25,13 +25,13 @@ def extract_and_save():
                 _, test_loader = DATA_LOADERS[dataset](
                     batch_size=NUM_SAMPLES, time_steps=t
                 )
-            except Exception as e:
+            except Exception as e: # noqa: BLE001
                 print(f"[!] Impossible de charger {dataset} à T={t} : {e}")
                 continue
 
             try:
                 x_batch, y_batch = next(iter(test_loader))
-            except Exception as e:
+            except Exception as e: # noqa: BLE001
                 print(f"[!] Erreur de lecture pour {dataset} à T={t} : {e}")
                 continue
 
