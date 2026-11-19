@@ -85,15 +85,16 @@ SKIP_NAME_HINTS = ("shortcut", "skip", "downsample", "residual")
 
 log = logging.getLogger("theoretical_energy")
 
+
 @dataclass
 class LayerStats:
     name: str
-    kind: str  # "spiking" | "synaptic" | "skip"
+    kind: str
     module_type: str
-    source: str = ""  # "input" | "hidden" : origine des évènements présynaptiques
-    neurons: int = 0  # neurones de la couche (spiking) ou présynaptiques (synaptic)
+    source: str = ""
+    neurons: int = 0
     synapses: int = 0
-    events: float = 0.0  # spikes émis ou évènements présynaptiques, tous échantillons
+    events: float = 0.0
     sops: float = 0.0
 
 
@@ -114,8 +115,6 @@ def synaptic_fanout(module, feature_shape):
     if module.padding_mode != "zeros":
         raise NotImplementedError(f"padding_mode={module.padding_mode} non supporté")
 
-    # Le gradient d'une convolution à poids binaires par rapport à une entrée de 1
-    # donne, pour chaque position d'entrée, le nombre de synapses qui en partent.
     conv = {1: F.conv1d, 2: F.conv2d, 3: F.conv3d}[weight.dim() - 2]
     mask = (weight != 0).to(torch.float32)
     with torch.enable_grad():
@@ -270,9 +269,6 @@ class SynapticActivityMonitor:
         self._batch["sops_hidden"] += spikes
 
 
-# ==========================================
-# CHARGEMENT DU MODÈLE ET DES DONNÉES
-# ==========================================
 def resolve_model_factory():
     try:
         from src.models import get_model
@@ -305,14 +301,7 @@ def resolve_path(path, plan_dir):
     return candidate
 
 
-def hardware_input_ids(num_inputs, max_input_neurons):
-    """Neurones d'entrée conservés par le sous-échantillonnage spatial de SpiNNaker."""
-    effective = min(num_inputs, max_input_neurons)
-    stride = max(1, num_inputs // effective)
-    return {min(i * stride, num_inputs - 1) for i in range(effective)}
-
-
-def load_batch(sample_paths, time_steps, spatial_shape, time_step_ms, args):
+def load_batch(sample_paths, time_steps, spatial_shape, time_step_ms):
     """
     Reconstruit le tenseur d'entrée [T, B, *spatial_shape] à partir des `spike_times`
     JSON : chaque spike incrémente de 1 le pas de temps correspondant.
@@ -320,9 +309,6 @@ def load_batch(sample_paths, time_steps, spatial_shape, time_step_ms, args):
     num_inputs = math.prod(spatial_shape)
     x = torch.zeros(time_steps, len(sample_paths), num_inputs)
     labels = []
-    kept_ids = None
-    if args.max_input_neurons is not None:
-        kept_ids = hardware_input_ids(num_inputs, args.max_input_neurons)
 
     for batch_idx, path in enumerate(sample_paths):
         with open(path, encoding="utf-8") as f:
@@ -339,9 +325,7 @@ def load_batch(sample_paths, time_steps, spatial_shape, time_step_ms, args):
         for neuron_idx, times in enumerate(spike_times):
             if not isinstance(times, list) or not times:
                 continue
-            if kept_ids is not None and neuron_idx not in kept_ids:
-                continue
-            for spike_time in times[: args.max_spikes_per_neuron]:
+            for spike_time in times:
                 step = round(spike_time / time_step_ms)
                 if 0 <= step < time_steps:
                     steps.append(step)
@@ -356,7 +340,6 @@ def load_batch(sample_paths, time_steps, spatial_shape, time_step_ms, args):
 
     x = x.view(time_steps, len(sample_paths), *spatial_shape)
     return x, torch.tensor(labels)
-
 
 
 def run_id_of(entry):
@@ -409,9 +392,7 @@ def evaluate_run(entry, plan_dir, get_model, device, args):
     try:
         for start in range(0, len(sample_paths), args.batch_size):
             batch_paths = sample_paths[start : start + args.batch_size]
-            x, labels = load_batch(
-                batch_paths, time_steps, spatial_shape, time_step_ms, args
-            )
+            x, labels = load_batch(batch_paths, time_steps, spatial_shape, time_step_ms)
 
             monitor.start_batch(len(batch_paths))
             outputs = model(x.to(device))
@@ -537,19 +518,6 @@ def parse_args(argv=None):
         action="store_true",
         help="Ajouter les SOPs de la couche d'entrée à energie_theorique_sops",
     )
-    parser.add_argument(
-        "--max-spikes-per-neuron",
-        type=int,
-        default=None,
-        help="Tronquer les spikes d'entrée comme sur SpiNNaker (MAX_SPIKES_PER_NEURON)",
-    )
-    parser.add_argument(
-        "--max-input-neurons",
-        type=int,
-        default=None,
-        help="Ne garder que les neurones d'entrée déployés sur SpiNNaker "
-        "(MAX_INPUT_NEURONS)",
-    )
     return parser.parse_args(argv)
 
 
@@ -590,7 +558,6 @@ def main(argv=None):
     )
     get_model = resolve_model_factory()
 
-    # Une ligne par run du plan : les runs en échec ou non évalués restent à NaN.
     rows = {run_id_of(entry): base_row(entry) for entry in plan}
     layer_rows = {}
     if args.resume:

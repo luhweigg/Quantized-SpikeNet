@@ -16,13 +16,9 @@ import torch.nn.functional as F
 from torch import nn
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+import spinnaker_energy
 import theoretical_energy_eval as tee
 from spikingjelly.activation_based import functional, neuron
-
-try:
-    import spinnaker_energy
-except ImportError:
-    spinnaker_energy = None
 
 RESULTS_DIR = Path("results_spinnaker")
 SUMMARY_COLUMNS = [
@@ -69,10 +65,8 @@ SUMMARY_COLUMNS = [
 ]
 
 DT = 1.0
-TIME_SCALE_FACTOR = 10
-TAU_M = 1.0 / math.log(
-    2.0
-)
+TIME_SCALE_FACTOR = 30
+TAU_M = 1.0 / math.log(2.0)
 REST_STEPS = 16
 POOL_THRESHOLD = 0.5
 READOUT_THRESHOLD = 30000.0
@@ -116,7 +110,6 @@ class Unsupported(Exception):
 
 class TooLarge(Exception):
     """Le réseau déplié ne tient pas dans le budget de la carte."""
-
 
 
 def leaf_modules(module):
@@ -371,7 +364,6 @@ def network_size(spec):
     return neurons, synapses, cores
 
 
-
 def ring_buffer_shift(max_summed_weight):
     """
     Décalage du « ring buffer » de sPyNNaker pour une somme de poids maximale donnée.
@@ -481,8 +473,10 @@ def core_loads(conns, pre_spikes):
             matrix = torch.sparse_coo_tensor(
                 index, values, (n_cores, n_pre), dtype=torch.float64
             ).coalesce()
-            loads.append(float(torch.sparse.mm(matrix, frames).max()) if len(pre) else 0.0)
-        result[size] = (loads[0], loads[1] + 1.0)  # + le spike de biais
+            loads.append(
+                float(torch.sparse.mm(matrix, frames).max()) if len(pre) else 0.0
+            )
+        result[size] = (loads[0], loads[1] + 1.0)
     return result
 
 
@@ -501,9 +495,13 @@ def count_cores(spec, core_sizes):
 
 def worst_cost_ms(loads, core_sizes, cost_event, cost_spike):
     """Temps estimé (ms) du cœur le plus chargé, au découpage donné."""
-    return max(
-        core_cost_us(*loads[p][core_sizes[p]], cost_event, cost_spike) for p in loads
-    ) / 1000.0
+    return (
+        max(
+            core_cost_us(*loads[p][core_sizes[p]], cost_event, cost_spike)
+            for p in loads
+        )
+        / 1000.0
+    )
 
 
 def needed_time_scale_factor(spec, loads, cost_event, cost_spike, max_cores):
@@ -532,7 +530,10 @@ def neurons_per_core(loads, time_scale_factor, cost_event, cost_spike):
     budget = TICK_USABLE * time_scale_factor * 1000.0
     sizes, overloaded = {}, []
     for post, by_size in loads.items():
-        costs = {n: core_cost_us(e, r, cost_event, cost_spike) for n, (e, r) in by_size.items()}
+        costs = {
+            n: core_cost_us(e, r, cost_event, cost_spike)
+            for n, (e, r) in by_size.items()
+        }
         fitting = [n for n in CORE_SIZES if costs[n] <= budget]
         if fitting:
             sizes[post] = fitting[0]
@@ -578,7 +579,9 @@ def read_losses():
         with ProvenanceReader() as reader:
             n_rows = int(reader.run_query("SELECT COUNT(*) FROM core_provenance")[0][0])
             if n_rows == 0:
-                raise RuntimeError("table core_provenance vide (write_provenance désactivé ?)")
+                raise RuntimeError(
+                    "table core_provenance vide (write_provenance désactivé ?)"
+                )
             for column, description in LOSS_COUNTERS.items():
                 rows = reader.run_query(
                     "SELECT COALESCE(SUM(the_value), 0) FROM core_provenance "
@@ -617,7 +620,9 @@ def read_losses():
         losses["provenance_source"] = "base"
     except Exception as exc:
         losses["provenance_source"] = f"illisible : {type(exc).__name__}: {exc}"[:150]
-        print(f"[!] Base de provenance illisible ({exc}) : lecture du journal à la place.")
+        print(
+            f"[!] Base de provenance illisible ({exc}) : lecture du journal à la place."
+        )
     return losses
 
 
@@ -632,7 +637,7 @@ class LogCounter(logging.Handler):
     def emit(self, record):
         try:
             message = record.getMessage()
-        except Exception:  # noqa: BLE001
+        except Exception:
             return
         for column, pattern in self.patterns.items():
             for match in pattern.finditer(message):
@@ -646,7 +651,7 @@ def enable_provenance():
 
         for option in PROVENANCE_OPTIONS:
             set_config("Reports", option, "True")
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         print(f"[!] Impossible de forcer la provenance : {exc}")
 
 
@@ -654,7 +659,6 @@ def readout_logits(spec, spike_counts, time_steps):
     """Logits = somme sur T de la sortie Linear, à partir des spikes cachés comptés."""
     readout = spec["readout"]
     return spike_counts @ readout["weight"].T + time_steps * readout["bias"]
-
 
 
 def split_by_sign(conns, delay):
@@ -879,13 +883,11 @@ def evaluate_entry(entry, plan_dir, get_model, args):
         metadata = json.load(f)
     spatial_shape = [int(s) for s in metadata["spatial_shape"]]
 
-    args.max_spikes_per_neuron = args.max_input_neurons = None
     x, labels = tee.load_batch(
         [tee.resolve_path(p, plan_dir) for p in entry["samples"]],
         time_steps,
         spatial_shape,
         float(metadata.get("time_step_ms", 1.0)),
-        args,
     )
     labels = labels.numpy()
 
@@ -996,29 +998,35 @@ def evaluate_entry(entry, plan_dir, get_model, args):
 
     correct = int((predictions == labels).sum())
     agreement = round(100.0 * float((predictions == fixed).mean()), 2)
-    lost = [
-        row[c] for c in ("lost_input_packets", "late_spikes", "timer_overruns")
-    ] + ([row["router_lost_packets"]] if row["router_lost_packets"] != "" else [])
+    lost = [row[c] for c in ("lost_input_packets", "late_spikes", "timer_overruns")] + (
+        [row["router_lost_packets"]] if row["router_lost_packets"] != "" else []
+    )
     row.update(
         status=status,
         accuracy_pct=round(100.0 * correct / len(labels), 2),
         correct_samples=correct,
         wall_time_s=round(time.time() - start, 2),
         agreement_fixed_point_pct=agreement,
-        reliable=(
-            "" if args.emulate else all(v != "" and int(v) == 0 for v in lost)
-        ),
+        reliable=("" if args.emulate else all(v != "" and int(v) == 0 for v in lost)),
     )
 
     pred_dir = args.results_dir / "predictions"
     pred_dir.mkdir(parents=True, exist_ok=True)
-    with open(pred_dir / f"{row['run_id']}.csv", "w", newline="", encoding="utf-8") as f:
+    with open(
+        pred_dir / f"{row['run_id']}.csv", "w", newline="", encoding="utf-8"
+    ) as f:
         writer = csv.writer(f)
         writer.writerow(["sample", "label", "pytorch", "fixed_point", "carte"])
         pytorch_pred = torch.cat(reference).numpy()
         for k in range(len(labels)):
             writer.writerow(
-                [k, int(labels[k]), int(pytorch_pred[k]), int(fixed[k]), int(predictions[k])]
+                [
+                    k,
+                    int(labels[k]),
+                    int(pytorch_pred[k]),
+                    int(fixed[k]),
+                    int(predictions[k]),
+                ]
             )
     return row
 
@@ -1089,7 +1097,9 @@ def main(argv=None):
         if not args.time_scale_factor.isdigit() or not (
             1 <= int(args.time_scale_factor) <= MAX_TIME_SCALE_FACTOR
         ):
-            parser.error("--time-scale-factor doit être « auto » ou un entier de 1 à 200.")
+            parser.error(
+                "--time-scale-factor doit être « auto » ou un entier de 1 à 200."
+            )
 
     results_dir = args.results_dir
     results_dir.mkdir(parents=True, exist_ok=True)
@@ -1167,11 +1177,10 @@ def main(argv=None):
 
         if row["status"] == "SUCCESS":
             archive_report(entry["dataset"], run_id, results_dir)
-            if spinnaker_energy is not None:
-                try:
-                    spinnaker_energy.collect_to_csv(results_dir)
-                except Exception as exc:
-                    print(f"[!] Extraction de l'énergie impossible : {exc}")
+            try:
+                spinnaker_energy.collect_to_csv(results_dir)
+            except Exception as exc:
+                print(f"[!] Extraction de l'énergie impossible : {exc}")
 
     print(f"Résumé : {summary_path}")
 
